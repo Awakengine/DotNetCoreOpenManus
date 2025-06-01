@@ -1,0 +1,134 @@
+@using OpenManus.Host.Models
+@using OpenManus.Host.Services
+@inject IConfigurationService ConfigurationService
+@inject IJSRuntime JSRuntime
+
+<div class="modal @(IsVisible ? "show" : "")" style="display: @(IsVisible ? "block" : "none")" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">设置</h5>
+                <button type="button" class="btn-close" @onclick="Close"></button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="@settings" OnValidSubmit="@SaveSettings">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    
+                    <!-- 主题设置 -->
+                    <div class="mb-3">
+                        <label class="form-label">主题</label>
+                        <select class="form-select" @bind="settings.Theme">
+                            <option value="light">浅色主题</option>
+                            <option value="dark">深色主题</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 语言设置 -->
+                    <div class="mb-3">
+                        <label class="form-label">语言</label>
+                        <select class="form-select" @bind="settings.Language">
+                            <option value="zh-CN">中文</option>
+                            <option value="en-US">English</option>
+                        </select>
+                    </div>
+                    
+                    <!-- LLM配置 -->
+                    <h6 class="mb-3">LLM模型配置</h6>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">模型名称</label>
+                        <InputText class="form-control" @bind-Value="settings.LLMConfig.Model" />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Base URL</label>
+                        <InputText class="form-control" @bind-Value="settings.LLMConfig.BaseUrl" />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">API Key</label>
+                        <InputText class="form-control" type="password" @bind-Value="settings.LLMConfig.ApiKey" />
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">最大Token数</label>
+                                <InputNumber class="form-control" @bind-Value="settings.LLMConfig.MaxTokens" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">温度值</label>
+                                <InputNumber class="form-control" step="0.1" @bind-Value="settings.LLMConfig.Temperature" />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="Close">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (IsVisible)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    [Parameter] public EventCallback OnSettingsSaved { get; set; }
+    
+    private AppSettings settings = new();
+    
+    protected override void OnInitialized()
+    {
+        LoadSettings();
+    }
+    
+    private void LoadSettings()
+    {
+        var currentSettings = ConfigurationService.GetAppSettings();
+        settings = new AppSettings
+        {
+            Theme = currentSettings.Theme,
+            Language = currentSettings.Language,
+            LLMConfig = new LLMConfig
+            {
+                Model = currentSettings.LLMConfig.Model,
+                BaseUrl = currentSettings.LLMConfig.BaseUrl,
+                ApiKey = currentSettings.LLMConfig.ApiKey,
+                MaxTokens = currentSettings.LLMConfig.MaxTokens,
+                Temperature = currentSettings.LLMConfig.Temperature
+            }
+        };
+    }
+    
+    private async Task SaveSettings()
+    {
+        try
+        {
+            await ConfigurationService.SaveAppSettingsAsync(settings);
+            await OnSettingsSaved.InvokeAsync();
+            await JSRuntime.InvokeVoidAsync("alert", "设置已保存成功！");
+            await Close();
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"保存设置时出错：{ex.Message}");
+        }
+    }
+    
+    private async Task Close()
+    {
+        IsVisible = false;
+        await IsVisibleChanged.InvokeAsync(IsVisible);
+    }
+}

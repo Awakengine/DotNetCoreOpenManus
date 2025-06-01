@@ -3,18 +3,40 @@ using System.Text;
 
 namespace OpenManus.Host.Services.Tools;
 
+/// <summary>
+/// 搜索工具，用于在互联网上搜索信息
+/// </summary>
 public class SearchTool : BaseAgentTool
 {
+    /// <summary>
+    /// HTTP客户端
+    /// </summary>
     private readonly HttpClient _httpClient;
     
+    /// <summary>
+    /// 构造函数，初始化搜索工具
+    /// </summary>
+    /// <param name="httpClient">HTTP客户端</param>
     public SearchTool(HttpClient httpClient)
     {
         _httpClient = httpClient;
     }
     
+    /// <summary>
+    /// 工具名称
+    /// </summary>
     public override string Name => "search";
+    
+    /// <summary>
+    /// 工具描述
+    /// </summary>
     public override string Description => "Search the internet for information";
     
+    /// <summary>
+    /// 执行搜索操作
+    /// </summary>
+    /// <param name="arguments">包含query和max_results参数的字典</param>
+    /// <returns>搜索结果</returns>
     public override async Task<string> ExecuteAsync(Dictionary<string, object> arguments)
     {
         await Task.CompletedTask; // 避免async警告
@@ -61,6 +83,10 @@ public class SearchTool : BaseAgentTool
         }
     }
     
+    /// <summary>
+    /// 获取工具的JSON Schema定义
+    /// </summary>
+    /// <returns>工具的Schema定义</returns>
     public override Dictionary<string, object> GetSchema()
     {
         return new Dictionary<string, object>
@@ -85,17 +111,36 @@ public class SearchTool : BaseAgentTool
     }
 }
 
+/// <summary>
+/// 终止工具，用于终止当前任务执行
+/// </summary>
 public class TerminateTool : BaseAgentTool
 {
+    /// <summary>
+    /// 工具名称
+    /// </summary>
     public override string Name => "terminate";
+    
+    /// <summary>
+    /// 工具描述
+    /// </summary>
     public override string Description => "Terminate the current task execution";
     
+    /// <summary>
+    /// 执行终止操作
+    /// </summary>
+    /// <param name="arguments">包含reason参数的字典</param>
+    /// <returns>终止结果</returns>
     public override Task<string> ExecuteAsync(Dictionary<string, object> arguments)
     {
         var reason = GetArgument<string>(arguments, "reason", "Task completed");
         return Task.FromResult($"Task terminated: {reason}");
     }
     
+    /// <summary>
+    /// 获取工具的JSON Schema定义
+    /// </summary>
+    /// <returns>工具的Schema定义</returns>
     public override Dictionary<string, object> GetSchema()
     {
         return new Dictionary<string, object>

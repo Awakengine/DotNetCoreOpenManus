@@ -1,8 +1,13 @@
 @using Microsoft.AspNetCore.Components.Web
+@using OpenManus.Host.Services
+@using OpenManus.Host.Components
 @namespace OpenManus.Host.Components.Layout
 @inherits LayoutComponentBase
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
+@* @inject SessionManagementService SessionService *@
+@inject ChatService ChatService
+@inject IConfigurationService ConfigurationService
 
 <div class="layout-container">
     <!-- 左侧对话历史列表 -->
@@ -33,6 +38,27 @@
                     <p class="text-muted">暂无对话历史</p>
                 </div>
             }
+        </div>
+        
+        <!-- 底部用户信息和设置区域 -->
+        <div class="chat-history-footer">
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-details">
+                    <div class="user-name">用户</div>
+                    <div class="user-status">在线</div>
+                </div>
+            </div>
+            <div class="footer-actions">
+                <button class="btn-settings" title="设置" @onclick="OpenSettings">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button class="btn-help" title="帮助" @onclick="OpenHelp">
+                    <i class="fas fa-question-circle"></i>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -106,17 +132,6 @@
 </div>
 
 <script>
-    // 全局文件预览函数，供其他组件调用
-    window.showFilePreview = function(fileName, filePath, content) {
-        // 通过Blazor调用C#方法
-        DotNet.invokeMethodAsync('OpenManus.Host', 'ShowFilePreviewFromJS', fileName, filePath, content || '');
-    };
-    
-    window.closeFilePreview = function() {
-        // 通过Blazor调用C#方法
-        DotNet.invokeMethodAsync('OpenManus.Host', 'CloseFilePreviewFromJS');
-    };
-    
     // 平滑滚动到底部
     window.smoothScrollToBottom = function(elementId) {
         const element = document.getElementById(elementId);
@@ -132,21 +147,17 @@
     };
 </script>
 
+<!-- 设置弹框 -->
+<SettingsModal IsVisible="@isSettingsVisible" IsVisibleChanged="@OnSettingsVisibilityChanged" OnSettingsSaved="@OnSettingsSaved" />
+
 @code {
-    private List<ChatSession> chatSessions = new();
+    private List<ChatSessionInfo> chatSessions = new();
     private string currentSessionId = "default-session";
     private bool isFilePreviewVisible = true;
     private bool isDocked = false;
     private bool isLoadingFile = false;
     private FilePreviewInfo? currentPreviewFile;
-    
-    public class ChatSession
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Title { get; set; } = string.Empty;
-        public DateTime LastActivity { get; set; }
-        public int MessageCount { get; set; }
-    }
+    private bool isSettingsVisible = false;
     
     public class FilePreviewInfo
     {
@@ -155,73 +166,120 @@
         public string Content { get; set; } = string.Empty;
     }
     
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        // 初始化默认对话会话
-        LoadChatSessions();
-        
-        // 导航到Agent页面
-        if (!Navigation.Uri.Contains("/agent"))
+        // 临时简化实现
+        chatSessions = new List<ChatSessionInfo>
         {
-            Navigation.NavigateTo("/agent");
+            new ChatSessionInfo
+            {
+                        Id = Guid.NewGuid().ToString(),
+                Title = "当前对话",
+                LastActivity = DateTime.Now,
+                MessageCount = 0,
+                CreatedAt = DateTime.Now
+            }
+        };
+        StateHasChanged();
+    }
+    
+    private async Task CreateNewChat()
+    {
+        try
+        {
+            // 创建新会话
+            var newSession = new ChatSessionInfo
+            {
+                Id = Guid.NewGuid().ToString(),
+                Title = $"新对话 {chatSessions.Count + 1}",
+                LastActivity = DateTime.Now,
+                MessageCount = 0,
+                CreatedAt = DateTime.Now
+            };
+            
+            chatSessions.Insert(0, newSession);
+            
+            // 清空当前对话
+            await ChatService.ClearMessagesAsync(newSession.Id);
+            
+            // 导航到新会话
+            Navigation.NavigateTo($"/agent/{newSession.Id}");
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"创建新对话失败: {ex.Message}");
         }
     }
     
-    private void LoadChatSessions()
+    private void SaveCurrentSessionMessages()
     {
-        chatSessions = new List<ChatSession>
+        try
         {
-            new ChatSession
+            // 这里可以添加保存当前会话消息的逻辑
+            // 由于消息已经通过ChatService自动保存，这里主要是更新会话元数据
+            if (!string.IsNullOrEmpty(currentSessionId))
             {
-                Id = "default-session",
-                Title = "当前对话",
-                LastActivity = DateTime.Now,
-                MessageCount = 0
+                // 临时移除会话更新逻辑
             }
-        };
-    }
-    
-    private void CreateNewChat()
-    {
-        var newSession = new ChatSession
+        }
+        catch (Exception ex)
         {
-            Id = Guid.NewGuid().ToString(),
-            Title = $"新对话 {chatSessions.Count + 1}",
-            LastActivity = DateTime.Now,
-            MessageCount = 0
-        };
-        
-        chatSessions.Insert(0, newSession);
-        currentSessionId = newSession.Id;
-        
-        // 导航到Agent页面并传递会话ID
-        Navigation.NavigateTo($"/agent?sessionId={newSession.Id}");
-        StateHasChanged();
+            Console.WriteLine($"保存当前会话失败: {ex.Message}");
+        }
     }
     
     private void SwitchToSession(string sessionId)
     {
-        currentSessionId = sessionId;
-        
-        // 导航到Agent页面并传递会话ID
-        Navigation.NavigateTo($"/agent?sessionId={sessionId}");
-        StateHasChanged();
+        try
+        {
+            currentSessionId = sessionId;
+            Navigation.NavigateTo($"/agent/{sessionId}");
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"切换会话失败: {ex.Message}");
+        }
     }
-    
+
     private void DeleteSession(string sessionId)
     {
-        if (sessionId == "default-session") return; // 不允许删除默认会话
-        
-        chatSessions.RemoveAll(s => s.Id == sessionId);
-        
-        // 如果删除的是当前会话，切换到默认会话
-        if (currentSessionId == sessionId)
+        try
         {
-            currentSessionId = "default-session";
-            Navigation.NavigateTo("/agent");
+            // 从本地列表中删除会话
+            chatSessions = chatSessions.Where(s => s.Id != sessionId).ToList();
+            
+            // 如果删除的是当前会话，导航到默认会话或创建新会话
+            if (currentSessionId == sessionId)
+            {
+                if (chatSessions.Any())
+                {
+                    var firstSession = chatSessions.First();
+                    Navigation.NavigateTo($"/agent/{firstSession.Id}");
+                }
+                else
+                {
+                    // 创建新会话
+                    var newSession = new ChatSessionInfo
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Title = $"新对话 {chatSessions.Count + 1}",
+                        LastActivity = DateTime.Now,
+                        MessageCount = 0,
+                        CreatedAt = DateTime.Now
+                    };
+                    chatSessions.Insert(0, newSession);
+                    Navigation.NavigateTo($"/agent/{newSession.Id}");
+                }
+            }
+            
+            StateHasChanged();
         }
-        
-        StateHasChanged();
+        catch (Exception ex)
+        {
+            Console.WriteLine($"删除会话失败: {ex.Message}");
+        }
     }
     
     private string GetCurrentSessionTitle()
@@ -249,21 +307,7 @@
         StateHasChanged();
     }
     
-    // JavaScript互操作方法
-    [JSInvokable("ShowFilePreviewFromJS")]
-    public static async Task ShowFilePreviewFromJS(string fileName, string filePath, string content = "")
-    {
-        // 这里需要通过静态方法或服务来更新UI状态
-        // 由于这是静态方法，我们需要另一种方式来处理
-        await Task.CompletedTask;
-    }
-    
-    [JSInvokable("CloseFilePreviewFromJS")]
-    public static async Task CloseFilePreviewFromJS()
-    {
-        // 这里需要通过静态方法或服务来更新UI状态
-        await Task.CompletedTask;
-    }
+    // JavaScript互操作方法已移除，改为直接使用实例方法
     
     // 实例方法用于显示文件预览
     public async Task ShowFilePreview(string fileName, string filePath, string content = "")
@@ -295,6 +339,32 @@
     {
         currentPreviewFile = null;
         isFilePreviewVisible = false;
+        StateHasChanged();
+    }
+    
+    private void OpenSettings()
+    {
+        isSettingsVisible = true;
+        StateHasChanged();
+    }
+    
+    private void OpenHelp()
+    {
+        // 这里可以添加打开帮助页面的逻辑
+        // 例如导航到帮助页面或显示帮助模态框
+        Console.WriteLine("打开帮助");
+    }
+    
+    private async Task OnSettingsVisibilityChanged(bool isVisible)
+    {
+        isSettingsVisible = isVisible;
+        StateHasChanged();
+    }
+    
+    private async Task OnSettingsSaved()
+    {
+        // 设置保存后的处理逻辑
+        // 可以在这里重新加载配置或更新UI
         StateHasChanged();
     }
 }

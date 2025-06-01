@@ -3,18 +3,40 @@ using System.Text.Json;
 
 namespace OpenManus.Host.Services.Tools;
 
+/// <summary>
+/// 文件操作工具，用于读取、写入和管理工作区文件
+/// </summary>
 public class FileOperationTool : BaseAgentTool
 {
+    /// <summary>
+    /// 文件管理服务
+    /// </summary>
     private readonly FileManagementService _fileService;
     
+    /// <summary>
+    /// 构造函数，初始化文件操作工具
+    /// </summary>
+    /// <param name="fileService">文件管理服务</param>
     public FileOperationTool(FileManagementService fileService)
     {
         _fileService = fileService;
     }
     
+    /// <summary>
+    /// 工具名称
+    /// </summary>
     public override string Name => "file_operation";
+    
+    /// <summary>
+    /// 工具描述
+    /// </summary>
     public override string Description => "Read, write, and manage files in the workspace";
     
+    /// <summary>
+    /// 执行文件操作
+    /// </summary>
+    /// <param name="arguments">包含operation、file_path等参数的字典</param>
+    /// <returns>文件操作结果</returns>
     public override async Task<string> ExecuteAsync(Dictionary<string, object> arguments)
     {
         var operation = GetArgument<string>(arguments, "operation", "");
@@ -53,6 +75,10 @@ public class FileOperationTool : BaseAgentTool
         }
     }
     
+    /// <summary>
+    /// 获取工具的JSON Schema定义
+    /// </summary>
+    /// <returns>工具的Schema定义</returns>
     public override Dictionary<string, object> GetSchema()
     {
         return new Dictionary<string, object>

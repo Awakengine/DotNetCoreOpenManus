@@ -3,11 +3,26 @@ using System.Text;
 
 namespace OpenManus.Host.Services.Tools;
 
+/// <summary>
+/// Python代码执行工具，用于执行Python代码并返回结果
+/// </summary>
 public class PythonExecuteTool : BaseAgentTool
 {
+    /// <summary>
+    /// 工具名称
+    /// </summary>
     public override string Name => "python_execute";
+    
+    /// <summary>
+    /// 工具描述
+    /// </summary>
     public override string Description => "Execute Python code and return the output";
     
+    /// <summary>
+    /// 执行Python代码
+    /// </summary>
+    /// <param name="arguments">包含code和timeout参数的字典</param>
+    /// <returns>Python代码执行结果</returns>
     public override async Task<string> ExecuteAsync(Dictionary<string, object> arguments)
     {
         var code = GetArgument<string>(arguments, "code", "");
@@ -82,6 +97,10 @@ public class PythonExecuteTool : BaseAgentTool
         }
     }
     
+    /// <summary>
+    /// 获取工具的JSON Schema定义
+    /// </summary>
+    /// <returns>工具的Schema定义</returns>
     public override Dictionary<string, object> GetSchema()
     {
         return new Dictionary<string, object>

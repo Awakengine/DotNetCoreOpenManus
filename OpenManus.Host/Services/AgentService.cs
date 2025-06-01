@@ -5,13 +5,36 @@ using System.Text;
 
 namespace OpenManus.Host.Services;
 
+/// <summary>
+/// AI代理服务类，负责管理AI代理的执行和工具调用
+/// </summary>
 public class AgentService
 {
+    /// <summary>
+    /// 存储不同会话的代理内存
+    /// </summary>
     private readonly Dictionary<string, AgentMemory> _sessions = new();
+    
+    /// <summary>
+    /// 可用的代理工具列表
+    /// </summary>
     private readonly List<IAgentTool> _tools = new();
+    
+    /// <summary>
+    /// HTTP客户端，用于网络请求
+    /// </summary>
     private readonly HttpClient _httpClient;
+    
+    /// <summary>
+    /// 文件管理服务
+    /// </summary>
     private readonly FileManagementService _fileService;
     
+    /// <summary>
+    /// 构造函数，初始化代理服务
+    /// </summary>
+    /// <param name="httpClient">HTTP客户端</param>
+    /// <param name="fileService">文件管理服务</param>
     public AgentService(HttpClient httpClient, FileManagementService fileService)
     {
         _httpClient = httpClient;
@@ -19,6 +42,9 @@ public class AgentService
         InitializeTools();
     }
     
+    /// <summary>
+    /// 初始化可用的工具
+    /// </summary>
     private void InitializeTools()
     {
         _tools.Add(new FileOperationTool(_fileService));
@@ -27,6 +53,13 @@ public class AgentService
         _tools.Add(new TerminateTool());
     }
     
+    /// <summary>
+    /// 执行代理任务
+    /// </summary>
+    /// <param name="sessionId">会话ID</param>
+    /// <param name="userMessage">用户消息</param>
+    /// <param name="maxSteps">最大执行步数</param>
+    /// <returns>代理执行结果</returns>
     public async Task<AgentExecutionResult> ExecuteTaskAsync(string sessionId, string userMessage, int maxSteps = 10)
     {
         var memory = GetOrCreateSession(sessionId);
@@ -81,6 +114,12 @@ public class AgentService
         return result;
     }
     
+    /// <summary>
+    /// 执行单个步骤
+    /// </summary>
+    /// <param name="memory">代理内存</param>
+    /// <param name="stepNumber">步骤编号</param>
+    /// <returns>代理响应</returns>
     private async Task<AgentResponse> ExecuteStepAsync(AgentMemory memory, int stepNumber)
     {
         // 构建系统提示
@@ -94,6 +133,12 @@ public class AgentService
         return response;
     }
     
+    /// <summary>
+    /// 模拟AI响应（在实际实现中应该调用真实的LLM API）
+    /// </summary>
+    /// <param name="memory">代理内存</param>
+    /// <param name="stepNumber">步骤编号</param>
+    /// <returns>代理响应</returns>
     private async Task<AgentResponse> SimulateAIResponseAsync(AgentMemory memory, int stepNumber)
     {
         await Task.CompletedTask; // 避免async警告
@@ -179,6 +224,11 @@ public class AgentService
         };
     }
     
+    /// <summary>
+    /// 从消息中提取搜索查询
+    /// </summary>
+    /// <param name="message">用户消息</param>
+    /// <returns>提取的搜索查询</returns>
     private string ExtractSearchQuery(string message)
     {
         // 简单的查询提取逻辑
@@ -193,6 +243,11 @@ public class AgentService
         return message;
     }
     
+    /// <summary>
+    /// 执行工具调用
+    /// </summary>
+    /// <param name="toolCall">工具调用信息</param>
+    /// <returns>工具执行结果</returns>
     private async Task<ToolResult> ExecuteToolAsync(ToolCall toolCall)
     {
         var tool = _tools.FirstOrDefault(t => t.Name == toolCall.Name);
@@ -229,6 +284,10 @@ public class AgentService
         }
     }
     
+    /// <summary>
+    /// 构建系统提示词
+    /// </summary>
+    /// <returns>系统提示词</returns>
     private string BuildSystemPrompt()
     {
         var toolDescriptions = _tools.Select(t => $"- {t.Name}: {t.Description}").ToList();
@@ -247,6 +306,11 @@ You should:
 When you need to use a tool, clearly indicate which tool you're using and why.";
     }
     
+    /// <summary>
+    /// 获取或创建会话
+    /// </summary>
+    /// <param name="sessionId">会话ID</param>
+    /// <returns>代理内存</returns>
     private AgentMemory GetOrCreateSession(string sessionId)
     {
         if (!_sessions.ContainsKey(sessionId))
@@ -256,11 +320,20 @@ When you need to use a tool, clearly indicate which tool you're using and why.";
         return _sessions[sessionId];
     }
     
+    /// <summary>
+    /// 获取指定会话
+    /// </summary>
+    /// <param name="sessionId">会话ID</param>
+    /// <returns>代理内存，如果不存在则返回null</returns>
     public AgentMemory? GetSession(string sessionId)
     {
         return _sessions.TryGetValue(sessionId, out var session) ? session : null;
     }
     
+    /// <summary>
+    /// 清除指定会话
+    /// </summary>
+    /// <param name="sessionId">会话ID</param>
     public void ClearSession(string sessionId)
     {
         if (_sessions.ContainsKey(sessionId))

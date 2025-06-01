@@ -11,6 +11,8 @@ builder.Services.AddRazorComponents()
 builder.Services.AddSingleton<FileManagementService>();
 builder.Services.AddSingleton<ChatService>();
 builder.Services.AddSingleton<AgentService>();
+builder.Services.AddSingleton<IConfigurationService, ConfigurationService>();
+// builder.Services.AddSingleton<SessionManagementService>();
 builder.Services.AddHttpClient();
 
 var app = builder.Build();

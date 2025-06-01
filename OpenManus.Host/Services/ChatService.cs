@@ -3,11 +3,24 @@ using System.Text.Json;
 
 namespace OpenManus.Host.Services;
 
+/// <summary>
+/// 聊天服务类，负责管理聊天消息的存储和检索
+/// </summary>
 public class ChatService
 {
+    /// <summary>
+    /// 数据存储路径
+    /// </summary>
     private readonly string _dataPath;
+    
+    /// <summary>
+    /// 内存中的会话缓存
+    /// </summary>
     private readonly Dictionary<string, List<ChatMessage>> _sessions = new();
 
+    /// <summary>
+    /// 构造函数，初始化聊天服务
+    /// </summary>
     public ChatService()
     {
         _dataPath = Path.Combine(Directory.GetCurrentDirectory(), "Data");
@@ -17,6 +30,11 @@ public class ChatService
         }
     }
 
+    /// <summary>
+    /// 获取指定会话的消息列表
+    /// </summary>
+    /// <param name="sessionId">会话ID</param>
+    /// <returns>消息列表</returns>
     public async Task<List<ChatMessage>> GetMessagesAsync(string sessionId)
     {
         if (_sessions.ContainsKey(sessionId))
@@ -37,6 +55,11 @@ public class ChatService
         return _sessions[sessionId];
     }
 
+    /// <summary>
+    /// 添加消息到指定会话
+    /// </summary>
+    /// <param name="sessionId">会话ID</param>
+    /// <param name="message">要添加的消息</param>
     public async Task AddMessageAsync(string sessionId, ChatMessage message)
     {
         if (!_sessions.ContainsKey(sessionId))
@@ -50,6 +73,10 @@ public class ChatService
         await SaveSessionAsync(sessionId);
     }
 
+    /// <summary>
+    /// 清除指定会话的所有消息
+    /// </summary>
+    /// <param name="sessionId">会话ID</param>
     public async Task ClearMessagesAsync(string sessionId)
     {
         if (_sessions.ContainsKey(sessionId))
@@ -64,6 +91,10 @@ public class ChatService
         }
     }
 
+    /// <summary>
+    /// 保存会话到文件
+    /// </summary>
+    /// <param name="sessionId">会话ID</param>
     private async Task SaveSessionAsync(string sessionId)
     {
         if (!_sessions.ContainsKey(sessionId))
@@ -76,7 +107,7 @@ public class ChatService
         {
             WriteIndented = true
         });
-
+        
         await File.WriteAllTextAsync(filePath, json);
     }
 }

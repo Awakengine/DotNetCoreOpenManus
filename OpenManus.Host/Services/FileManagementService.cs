@@ -2,10 +2,20 @@ using OpenManus.Host.Models;
 
 namespace OpenManus.Host.Services;
 
+/// <summary>
+/// 文件管理服务类，负责工作区文件的管理和操作
+/// </summary>
 public class FileManagementService
 {
+    /// <summary>
+    /// 工作区根目录路径
+    /// </summary>
     private readonly string _workspaceRoot;
 
+    /// <summary>
+    /// 构造函数，初始化文件管理服务
+    /// </summary>
+    /// <param name="configuration">配置对象</param>
     public FileManagementService(IConfiguration configuration)
     {
         _workspaceRoot = Path.Combine(Directory.GetCurrentDirectory(), "workspace");
@@ -15,6 +25,11 @@ public class FileManagementService
         }
     }
 
+    /// <summary>
+    /// 获取指定路径下的文件和目录列表
+    /// </summary>
+    /// <param name="relativePath">相对路径，默认为根目录</param>
+    /// <returns>文件信息列表</returns>
     public async Task<List<Models.FileInfo>> GetFilesAsync(string relativePath = "")
     {
         await Task.CompletedTask; // 避免async警告
@@ -60,6 +75,12 @@ public class FileManagementService
         return files.OrderBy(f => !f.IsDirectory).ThenBy(f => f.Name).ToList();
     }
 
+    /// <summary>
+    /// 读取文件内容
+    /// </summary>
+    /// <param name="relativePath">文件的相对路径</param>
+    /// <returns>文件内容</returns>
+    /// <exception cref="FileNotFoundException">文件不存在时抛出</exception>
     public async Task<string> ReadFileContentAsync(string relativePath)
     {
         var fullPath = Path.Combine(_workspaceRoot, relativePath);
@@ -71,6 +92,12 @@ public class FileManagementService
         return await File.ReadAllTextAsync(fullPath);
     }
 
+    /// <summary>
+    /// 读取文件的字节数组
+    /// </summary>
+    /// <param name="relativePath">文件的相对路径</param>
+    /// <returns>文件的字节数组</returns>
+    /// <exception cref="FileNotFoundException">文件不存在时抛出</exception>
     public async Task<byte[]> ReadFileBytesAsync(string relativePath)
     {
         var fullPath = Path.Combine(_workspaceRoot, relativePath);
@@ -82,6 +109,11 @@ public class FileManagementService
         return await File.ReadAllBytesAsync(fullPath);
     }
 
+    /// <summary>
+    /// 写入文件内容
+    /// </summary>
+    /// <param name="relativePath">文件的相对路径</param>
+    /// <param name="content">要写入的内容</param>
     public async Task WriteFileAsync(string relativePath, string content)
     {
         var fullPath = Path.Combine(_workspaceRoot, relativePath);
@@ -95,6 +127,11 @@ public class FileManagementService
         await File.WriteAllTextAsync(fullPath, content);
     }
     
+    /// <summary>
+    /// 检查文件是否存在
+    /// </summary>
+    /// <param name="relativePath">文件的相对路径</param>
+    /// <returns>文件是否存在</returns>
     public async Task<bool> FileExistsAsync(string relativePath)
     {
         await Task.CompletedTask; // 避免async警告
@@ -102,11 +139,21 @@ public class FileManagementService
         return File.Exists(fullPath);
     }
 
+    /// <summary>
+    /// 获取文件的完整路径
+    /// </summary>
+    /// <param name="relativePath">文件的相对路径</param>
+    /// <returns>文件的完整路径</returns>
     public string GetFullPath(string relativePath)
     {
         return Path.Combine(_workspaceRoot, relativePath);
     }
 
+    /// <summary>
+    /// 根据文件扩展名获取MIME类型
+    /// </summary>
+    /// <param name="extension">文件扩展名</param>
+    /// <returns>MIME类型</returns>
     private string GetMimeType(string extension)
     {
         return extension.ToLower() switch
