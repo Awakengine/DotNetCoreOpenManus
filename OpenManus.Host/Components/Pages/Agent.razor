@@ -1,0 +1,433 @@
+@page "/"
+@page "/agent"
+@page "/agent/{SessionId}"
+@using OpenManus.Host.Models
+@using OpenManus.Host.Services
+@inject AgentService AgentService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>OpenManus Agent</PageTitle>
+
+<div class="agent-content">
+
+        @if (agentMemory == null || !agentMemory.Messages.Any())
+        {
+            <div class="welcome-message">
+                <div class="welcome-content">
+                    <i class="fas fa-robot fa-3x text-primary mb-3"></i>
+                    <h5>欢迎使用 Manus AI Agent</h5>
+                    <p>我是一个多功能AI助手，可以帮助您：</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-file"></i> 文件操作和管理</li>
+                        <li><i class="fab fa-python"></i> Python代码执行</li>
+                        <li><i class="fas fa-search"></i> 信息搜索</li>
+                        <li><i class="fas fa-tasks"></i> 复杂任务规划和执行</li>
+                    </ul>
+                    <p>请输入您的任务或问题，我将为您提供帮助。</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="agent-messages" id="agentMessages">
+                @foreach (var message in agentMemory.Messages.Where(m => m.Role != "system"))
+                {
+                    <div class="message @GetMessageClass(message.Role)">
+                        <div class="message-avatar">
+                            @if (message.Role == "user")
+                            {
+                                <i class="fas fa-user"></i>
+                            }
+                            else if (message.Role == "assistant")
+                            {
+                                <i class="fas fa-robot"></i>
+                            }
+                            else if (message.Role == "tool")
+                            {
+                                <i class="fas fa-cog"></i>
+                            }
+                        </div>
+                        <div class="message-content">
+                            <div class="message-text">
+                                @if (message.Role == "tool")
+                                {
+                                    <div class="tool-result">
+                                        <strong>工具执行结果:</strong>
+                                        <pre>@message.Content</pre>
+                                    </div>
+                                }
+                                else
+                                {
+                                    @((MarkupString)FormatMessageContent(message.Content))
+                                    @if (message.Role == "assistant" && ContainsFileReference(message.Content))
+                                    {
+                                        <div class="file-actions">
+                                            @foreach (var fileRef in ExtractFileReferences(message.Content))
+                                            {
+                                                <button class="btn btn-sm btn-outline-primary file-preview-btn" 
+                                                        @onclick="() => ShowFilePreview(fileRef.Name, fileRef.Path)">
+                                                    <i class="fas fa-eye"></i> 预览 @fileRef.Name
+                                                </button>
+                                            }
+                                        </div>
+                                    }
+                                }
+                            </div>
+                            <div class="message-time">@message.Timestamp.ToString("HH:mm:ss")</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- 执行结果显示 -->
+        @if (currentExecution != null)
+        {
+            <div class="execution-status">
+                <div class="execution-header">
+                    <h6><i class="fas fa-play"></i> 任务执行中...</h6>
+                    @if (currentExecution.IsCompleted)
+                    {
+                        <span class="badge bg-success">已完成</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-primary">进行中</span>
+                    }
+                </div>
+                <div class="execution-steps">
+                    @foreach (var step in currentExecution.Steps)
+                    {
+                        <div class="execution-step">
+                            <i class="fas fa-chevron-right"></i>
+                            @step
+                        </div>
+                    }
+                </div>
+                @if (!string.IsNullOrEmpty(currentExecution.FinalResult))
+                {
+                    <div class="execution-result">
+                        <strong>最终结果:</strong>
+                        <div class="result-content">@currentExecution.FinalResult</div>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(currentExecution.Error))
+                {
+                    <div class="execution-error">
+                        <strong>错误:</strong>
+                        <div class="error-content">@currentExecution.Error</div>
+                    </div>
+                }
+            </div>
+        }
+
+        <div class="agent-input-area">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="输入您的任务或问题..." 
+                       @bind="currentMessage" @onkeypress="HandleKeyPress" disabled="@isProcessing" />
+                <button class="btn btn-primary" @onclick="ExecuteTask" disabled="@(isProcessing || string.IsNullOrWhiteSpace(currentMessage))">
+                    @if (isProcessing)
+                    {
+                        <i class="fas fa-spinner fa-spin"></i>
+                    }
+                    else
+                    {
+                        <i class="fas fa-paper-plane"></i>
+                    }
+                    执行任务
+                </button>
+            </div>
+        </div>
+</div>
+
+@code {
+    [Parameter] public string? SessionId { get; set; }
+    
+    private List<OpenManus.Host.Services.Tools.IAgentTool> availableTools = new();
+    private AgentMemory? agentMemory;
+    private AgentExecutionResult? currentExecution;
+    private string currentMessage = string.Empty;
+    private bool isProcessing = false;
+    private string currentSessionId = "agent-session";
+    private Dictionary<string, AgentMemory> sessionMemories = new();
+    
+    // 对话历史相关
+    private List<ChatSession> chatSessions = new();
+    
+    public class ChatSession
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public DateTime LastActivity { get; set; }
+        public int MessageCount { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.CompletedTask; // 避免async警告
+        
+        availableTools = AgentService.GetAvailableTools();
+        
+        // 设置当前会话ID
+        if (!string.IsNullOrEmpty(SessionId))
+        {
+            currentSessionId = SessionId;
+        }
+        
+        // 加载会话记忆
+        LoadSessionMemory();
+        
+        // 初始化对话历史（这里可以从持久化存储加载）
+        LoadChatSessions();
+    }
+    
+    protected override Task OnParametersSetAsync()
+    {
+        // 当参数变化时更新会话
+        if (!string.IsNullOrEmpty(SessionId) && SessionId != currentSessionId)
+        {
+            currentSessionId = SessionId;
+            LoadSessionMemory();
+            StateHasChanged();
+        }
+        return Task.CompletedTask;
+    }
+
+    private async Task ExecuteTask()
+    {
+        if (string.IsNullOrWhiteSpace(currentMessage) || isProcessing)
+            return;
+
+        isProcessing = true;
+        var message = currentMessage;
+        currentMessage = string.Empty;
+        
+        try
+        {
+            currentExecution = await AgentService.ExecuteTaskAsync(currentSessionId, message);
+            agentMemory = AgentService.GetSession(currentSessionId);
+            
+            // 保存会话记忆
+            SaveSessionMemory();
+            
+            StateHasChanged();
+            await ScrollToBottom();
+        }
+        catch (Exception ex)
+        {
+            // 处理错误
+            Console.WriteLine($"Error executing task: {ex.Message}");
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !isProcessing)
+        {
+            await ExecuteTask();
+        }
+    }
+
+    private async Task ClearSession()
+    {
+        await Task.CompletedTask; // 避免async警告
+        
+        AgentService.ClearSession(currentSessionId);
+        agentMemory = AgentService.GetSession(currentSessionId);
+        currentExecution = null;
+        
+        // 清空当前会话的记忆
+        if (agentMemory != null)
+        {
+            sessionMemories[currentSessionId] = agentMemory;
+        }
+        
+        StateHasChanged();
+    }
+
+    private string GetMessageClass(string role)
+    {
+        return role switch
+        {
+            "user" => "user-message",
+            "assistant" => "ai-message",
+            "tool" => "tool-message",
+            _ => "system-message"
+        };
+    }
+
+    private string FormatMessageContent(string content)
+    {
+        // 简单的格式化 - 将换行符转换为HTML
+        return content.Replace("\n", "<br/>");
+    }
+
+    private async Task ScrollToBottom()
+    {
+        await Task.Delay(100);
+        await JSRuntime.InvokeVoidAsync("smoothScrollToBottom", "agent-messages");
+    }
+    
+    // 对话历史管理方法
+    private void LoadChatSessions()
+    {
+        // 这里可以从持久化存储加载对话历史
+        // 暂时创建一些示例数据
+        chatSessions = new List<ChatSession>
+        {
+            new ChatSession
+            {
+                Id = "session-1",
+                Title = "文件处理任务",
+                LastActivity = DateTime.Now.AddHours(-2),
+                MessageCount = 5
+            },
+            new ChatSession
+            {
+                Id = "session-2",
+                Title = "代码生成",
+                LastActivity = DateTime.Now.AddDays(-1),
+                MessageCount = 8
+            }
+        };
+    }
+    
+    private void LoadSessionMemory()
+    {
+        // 加载当前会话的记忆
+        if (sessionMemories.ContainsKey(currentSessionId))
+        {
+            agentMemory = sessionMemories[currentSessionId];
+        }
+        else
+        {
+            agentMemory = AgentService.GetSession(currentSessionId);
+            if (agentMemory != null)
+            {
+                sessionMemories[currentSessionId] = agentMemory;
+            }
+        }
+    }
+    
+    private void SaveSessionMemory()
+    {
+        // 保存当前会话的记忆
+        if (agentMemory != null)
+        {
+            sessionMemories[currentSessionId] = agentMemory;
+        }
+    }
+    
+    private async Task StartNewChat()
+    {
+        var newSessionId = $"session-{DateTime.Now.Ticks}";
+        var newSession = new ChatSession
+        {
+            Id = newSessionId,
+            Title = "新对话",
+            LastActivity = DateTime.Now,
+            MessageCount = 0
+        };
+        
+        chatSessions.Insert(0, newSession);
+        currentSessionId = newSessionId;
+        
+        // 清空当前会话
+        agentMemory = AgentService.GetSession(currentSessionId);
+        currentExecution = null;
+        
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+    
+    private async Task SwitchToSession(string sessionId)
+    {
+        currentSessionId = sessionId;
+        agentMemory = AgentService.GetSession(currentSessionId);
+        currentExecution = null;
+        
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+    
+    // 文件预览方法
+    private async Task ShowFilePreview(string fileName, string filePath)
+    {
+        try
+        {
+            // 这里可以添加实际的文件内容读取逻辑
+            string fileContent = await LoadFileContent(filePath);
+            
+            // 通过JavaScript调用MainLayout的文件预览功能
+            await JSRuntime.InvokeVoidAsync("showFilePreview", fileName, filePath, fileContent);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"显示文件预览失败: {ex.Message}");
+            // 使用默认内容
+            await JSRuntime.InvokeVoidAsync("showFilePreview", fileName, filePath, $"// 无法加载文件内容\n// 文件: {fileName}\n// 路径: {filePath}");
+        }
+    }
+    
+    private async Task<string> LoadFileContent(string filePath)
+    {
+        // 这里应该实现实际的文件读取逻辑
+        // 目前返回示例内容
+        await Task.Delay(100); // 模拟异步操作
+        
+        return $"// 文件内容示例\n// 文件路径: {filePath}\n// 加载时间: {DateTime.Now}\n\n// 这里是文件的实际内容\nconsole.log('Hello from {System.IO.Path.GetFileName(filePath)}');";
+    }
+    
+    private async Task CloseFilePreview()
+    {
+        // 通过JavaScript关闭MainLayout的文件预览面板
+        await JSRuntime.InvokeVoidAsync("closeFilePreview");
+    }
+    
+    // 文件引用检测方法
+    private bool ContainsFileReference(string content)
+    {
+        // 简单的文件引用检测，可以根据实际需求调整
+        return content.Contains("创建文件") || content.Contains("生成文件") || 
+               content.Contains(".cs") || content.Contains(".js") || 
+               content.Contains(".html") || content.Contains(".css") ||
+               content.Contains(".txt") || content.Contains(".json");
+    }
+    
+    private List<(string Name, string Path)> ExtractFileReferences(string content)
+    {
+        var fileRefs = new List<(string Name, string Path)>();
+        
+        // 使用正则表达式提取文件引用
+        var filePattern = @"([\w\-\.]+\.(cs|js|html|css|txt|json|md|xml|yml|yaml))";
+        var matches = System.Text.RegularExpressions.Regex.Matches(content, filePattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        
+        foreach (System.Text.RegularExpressions.Match match in matches)
+        {
+            var fileName = match.Value;
+            var filePath = $"/temp/{fileName}"; // 假设的文件路径，实际应该从上下文获取
+            
+            if (!fileRefs.Any(f => f.Name == fileName))
+            {
+                fileRefs.Add((fileName, filePath));
+            }
+        }
+        
+        return fileRefs;
+     }
+     
+     protected override async Task OnAfterRenderAsync(bool firstRender)
+     {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("initModernUI");
+        }
+    }
+}

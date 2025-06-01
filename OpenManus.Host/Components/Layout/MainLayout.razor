@@ -1,0 +1,300 @@
+@using Microsoft.AspNetCore.Components.Web
+@namespace OpenManus.Host.Components.Layout
+@inherits LayoutComponentBase
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+
+<div class="layout-container">
+    <!-- 左侧对话历史列表 -->
+    <div class="chat-history-panel">
+        <div class="panel-header">
+            <h5 class="panel-title">对话历史</h5>
+            <button class="btn-new-chat" title="新建对话" @onclick="CreateNewChat">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+        <div class="chat-history-list">
+            @foreach (var session in chatSessions)
+            {
+                <div class="chat-item @(session.Id == currentSessionId ? "active" : "")" @onclick="() => SwitchToSession(session.Id)">
+                    <div class="chat-title">@session.Title</div>
+                    <div class="chat-time">@session.LastActivity.ToString("MM/dd HH:mm")</div>
+                    <div class="chat-actions">
+                        <button class="btn-delete" title="删除对话" @onclick="() => DeleteSession(session.Id)" @onclick:stopPropagation="true">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+            @if (!chatSessions.Any())
+            {
+                <div class="empty-history">
+                    <i class="fas fa-comments text-muted"></i>
+                    <p class="text-muted">暂无对话历史</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- 右侧内容区域 -->
+    <div class="content-area">
+        <!-- 对话内容区 -->
+        <div class="chat-content-panel">
+            <div class="panel-header">
+                <h5 class="panel-title">@GetCurrentSessionTitle()</h5>
+                <div class="chat-controls">
+                    <button class="btn-clear" title="清空对话" @onclick="ClearCurrentSession">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button class="btn-settings" title="设置">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button class="btn-toggle-preview" title="切换文件预览" @onclick="ToggleFilePreview">
+                        <i class="fas fa-file-alt"></i>
+                    </button>
+                </div>
+            </div>
+            <main class="main-content">
+                @Body
+            </main>
+        </div>
+
+        <!-- 右侧文件预览区 -->
+        <div class="file-preview-panel @(isFilePreviewVisible ? "" : "collapsed")" id="filePreviewPanel">
+            <div class="panel-header">
+                <h5 class="panel-title">文件预览</h5>
+                <div class="panel-controls">
+                    <button class="btn-dock" title="停靠/取消停靠" @onclick="ToggleDockMode">
+                        <i class="fas @(isDocked ? "fa-expand" : "fa-thumbtack")"></i>
+                    </button>
+                    <button class="btn-collapse" title="折叠" @onclick="ToggleFilePreview">
+                        <i class="fas @(isFilePreviewVisible ? "fa-chevron-right" : "fa-chevron-left")"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="file-preview-content">
+                @if (currentPreviewFile != null)
+                {
+                    <div class="file-info">
+                        <h6><i class="fas fa-file-alt"></i> @currentPreviewFile.Name</h6>
+                        <p class="file-path">@currentPreviewFile.Path</p>
+                    </div>
+                    <div class="file-content">
+                        @if (isLoadingFile)
+                        {
+                            <div class="loading-spinner">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>正在加载文件内容...</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <pre><code>@currentPreviewFile.Content</code></pre>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="no-file-selected">
+                        <i class="fas fa-file-alt"></i>
+                        <p>选择一个文件进行预览</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 全局文件预览函数，供其他组件调用
+    window.showFilePreview = function(fileName, filePath, content) {
+        // 通过Blazor调用C#方法
+        DotNet.invokeMethodAsync('OpenManus.Host', 'ShowFilePreviewFromJS', fileName, filePath, content || '');
+    };
+    
+    window.closeFilePreview = function() {
+        // 通过Blazor调用C#方法
+        DotNet.invokeMethodAsync('OpenManus.Host', 'CloseFilePreviewFromJS');
+    };
+    
+    // 平滑滚动到底部
+    window.smoothScrollToBottom = function(elementId) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.scrollTop = element.scrollHeight;
+        }
+    };
+    
+    // 初始化现代UI
+    window.initModernUI = function() {
+        // 可以在这里添加一些UI初始化逻辑
+        console.log('Modern UI initialized');
+    };
+</script>
+
+@code {
+    private List<ChatSession> chatSessions = new();
+    private string currentSessionId = "default-session";
+    private bool isFilePreviewVisible = true;
+    private bool isDocked = false;
+    private bool isLoadingFile = false;
+    private FilePreviewInfo? currentPreviewFile;
+    
+    public class ChatSession
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public DateTime LastActivity { get; set; }
+        public int MessageCount { get; set; }
+    }
+    
+    public class FilePreviewInfo
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Path { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
+    }
+    
+    protected override void OnInitialized()
+    {
+        // 初始化默认对话会话
+        LoadChatSessions();
+        
+        // 导航到Agent页面
+        if (!Navigation.Uri.Contains("/agent"))
+        {
+            Navigation.NavigateTo("/agent");
+        }
+    }
+    
+    private void LoadChatSessions()
+    {
+        chatSessions = new List<ChatSession>
+        {
+            new ChatSession
+            {
+                Id = "default-session",
+                Title = "当前对话",
+                LastActivity = DateTime.Now,
+                MessageCount = 0
+            }
+        };
+    }
+    
+    private void CreateNewChat()
+    {
+        var newSession = new ChatSession
+        {
+            Id = Guid.NewGuid().ToString(),
+            Title = $"新对话 {chatSessions.Count + 1}",
+            LastActivity = DateTime.Now,
+            MessageCount = 0
+        };
+        
+        chatSessions.Insert(0, newSession);
+        currentSessionId = newSession.Id;
+        
+        // 导航到Agent页面并传递会话ID
+        Navigation.NavigateTo($"/agent?sessionId={newSession.Id}");
+        StateHasChanged();
+    }
+    
+    private void SwitchToSession(string sessionId)
+    {
+        currentSessionId = sessionId;
+        
+        // 导航到Agent页面并传递会话ID
+        Navigation.NavigateTo($"/agent?sessionId={sessionId}");
+        StateHasChanged();
+    }
+    
+    private void DeleteSession(string sessionId)
+    {
+        if (sessionId == "default-session") return; // 不允许删除默认会话
+        
+        chatSessions.RemoveAll(s => s.Id == sessionId);
+        
+        // 如果删除的是当前会话，切换到默认会话
+        if (currentSessionId == sessionId)
+        {
+            currentSessionId = "default-session";
+            Navigation.NavigateTo("/agent");
+        }
+        
+        StateHasChanged();
+    }
+    
+    private string GetCurrentSessionTitle()
+    {
+        var session = chatSessions.FirstOrDefault(s => s.Id == currentSessionId);
+        return session?.Title ?? "AI 助手";
+    }
+    
+    private void ClearCurrentSession()
+    {
+        // 这里可以添加清空当前会话的逻辑
+        // 例如调用AgentService清空会话
+        StateHasChanged();
+    }
+    
+    private void ToggleFilePreview()
+    {
+        isFilePreviewVisible = !isFilePreviewVisible;
+        StateHasChanged();
+    }
+    
+    private void ToggleDockMode()
+    {
+        isDocked = !isDocked;
+        StateHasChanged();
+    }
+    
+    // JavaScript互操作方法
+    [JSInvokable("ShowFilePreviewFromJS")]
+    public static async Task ShowFilePreviewFromJS(string fileName, string filePath, string content = "")
+    {
+        // 这里需要通过静态方法或服务来更新UI状态
+        // 由于这是静态方法，我们需要另一种方式来处理
+        await Task.CompletedTask;
+    }
+    
+    [JSInvokable("CloseFilePreviewFromJS")]
+    public static async Task CloseFilePreviewFromJS()
+    {
+        // 这里需要通过静态方法或服务来更新UI状态
+        await Task.CompletedTask;
+    }
+    
+    // 实例方法用于显示文件预览
+    public async Task ShowFilePreview(string fileName, string filePath, string content = "")
+    {
+        isLoadingFile = true;
+        isFilePreviewVisible = true;
+        
+        currentPreviewFile = new FilePreviewInfo
+        {
+            Name = fileName,
+            Path = filePath,
+            Content = content
+        };
+        
+        StateHasChanged();
+        
+        // 模拟加载文件内容
+        if (string.IsNullOrEmpty(content))
+        {
+            await Task.Delay(1000); // 模拟加载时间
+            currentPreviewFile.Content = $"// 文件内容示例\n// 文件: {fileName}\n// 路径: {filePath}\n\n// 这里显示实际的文件内容\nconsole.log('Hello from {fileName}');";
+        }
+        
+        isLoadingFile = false;
+        StateHasChanged();
+    }
+    
+    public void CloseFilePreview()
+    {
+        currentPreviewFile = null;
+        isFilePreviewVisible = false;
+        StateHasChanged();
+    }
+}
