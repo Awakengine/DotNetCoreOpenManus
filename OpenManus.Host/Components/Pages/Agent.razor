@@ -17,7 +17,7 @@
             <div class="welcome-message">
                 <div class="welcome-content">
                     <i class="fas fa-robot fa-3x text-primary mb-3"></i>
-                    <h5>欢迎使用 Manus AI Agent</h5>
+                    <h5>欢迎使用 OpenManus AI Agent</h5>
                     <p>我是一个多功能AI助手，可以帮助您：</p>
                     <ul class="feature-list">
                         <li><i class="fas fa-file"></i> 文件操作和管理</li>
@@ -124,9 +124,19 @@
         }
 
         <div class="agent-input-area">
-            <div class="input-group">
-                <input type="text" class="form-control" placeholder="输入您的任务或问题..." 
-                       @bind="currentMessage" @onkeypress="HandleKeyPress" disabled="@isProcessing" />
+            <div class="input-group align-items-end">
+                <label class="btn btn-outline-secondary mb-0 me-2">
+                    <i class="fas fa-paperclip"></i>
+                    <InputFile OnChange="OnFileSelected" multiple style="display:none" @ref="fileInputRef" />
+                </label>
+                <textarea class="form-control" 
+                          placeholder="输入您的消息...（Shift+Enter 换行）" 
+                          @bind="currentMessage"
+                          @bind:event="oninput"
+                          @onkeydown="@(e => HandleKeyPress(e))"
+                          disabled="@isProcessing" 
+                          rows="1" 
+                          @ref="textareaRef"></textarea>
                 <button class="btn btn-primary" @onclick="ExecuteTask" disabled="@(isProcessing || string.IsNullOrWhiteSpace(currentMessage))">
                     @if (isProcessing)
                     {
@@ -139,6 +149,16 @@
                     执行任务
                 </button>
             </div>
+            @if (selectedFiles?.Count > 0)
+            {
+                <div class="mt-2">
+                    <span>已选择附件：</span>
+                    @foreach (var file in selectedFiles)
+                    {
+                        <span class="badge bg-secondary me-1">@file.Name</span>
+                    }
+                </div>
+            }
         </div>
 </div>
 
@@ -152,6 +172,8 @@
     private bool isProcessing = false;
     private string currentSessionId = "agent-session";
     private Dictionary<string, AgentMemory> sessionMemories = new();
+    private ElementReference textareaRef;
+    private InputFile fileInputRef;
     
     // 对话历史相关
     private List<ChatSession> chatSessions = new();
@@ -229,10 +251,22 @@
 
     private async Task HandleKeyPress(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter" && !isProcessing)
+        // Shift+Enter 换行，Enter 发送
+        if (e.Key == "Enter" && e.ShiftKey)
+        {
+            await Task.Delay(10); // 等待内容更新
+            await JSRuntime.InvokeVoidAsync("autoResizeTextarea", textareaRef);
+        }
+        else if (e.Key == "Enter" && !e.ShiftKey && !isProcessing)
         {
             await ExecuteTask();
         }
+    }
+
+    private async Task OnTextareaInput()
+    {
+        // 每次输入时自动调整 textarea 高度
+        await JSRuntime.InvokeVoidAsync("autoResizeTextarea", textareaRef);
     }
 
     private async Task ClearSession()
@@ -429,5 +463,11 @@
         {
             await JSRuntime.InvokeVoidAsync("initModernUI");
         }
+    }
+    private List<IBrowserFile> selectedFiles = new();
+
+    private void OnFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFiles = e.GetMultipleFiles().ToList();
     }
 }

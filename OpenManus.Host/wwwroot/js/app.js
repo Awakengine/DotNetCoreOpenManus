@@ -44,8 +44,22 @@ document.addEventListener('keydown', (event) => {
 
 // 自动调整文本区域高度
 window.autoResizeTextarea = (element) => {
+    // 重置高度以获取正确的 scrollHeight
     element.style.height = 'auto';
-    element.style.height = element.scrollHeight + 'px';
+    
+    // 计算新高度，设置最小高度为一行，最大高度为6行
+    const minHeight = 48; // 约一行的高度
+    const maxHeight = 144; // 约6行的高度
+    const newHeight = Math.min(Math.max(element.scrollHeight, minHeight), maxHeight);
+    
+    element.style.height = newHeight + 'px';
+    
+    // 如果内容超过最大高度，显示滚动条
+    if (element.scrollHeight > maxHeight) {
+        element.style.overflowY = 'auto';
+    } else {
+        element.style.overflowY = 'hidden';
+    }
 };
 
 // 现代化UI交互效果

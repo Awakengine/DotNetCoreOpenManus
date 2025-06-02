@@ -8,6 +8,7 @@
 @* @inject SessionManagementService SessionService *@
 @inject ChatService ChatService
 @inject IConfigurationService ConfigurationService
+@inject ILogger<MainLayout> Logger
 
 <div class="layout-container">
     <!-- 左侧对话历史列表 -->
@@ -72,7 +73,7 @@
                     <button class="btn-clear" title="清空对话" @onclick="ClearCurrentSession">
                         <i class="fas fa-trash"></i>
                     </button>
-                    <button class="btn-settings" title="设置">
+                    <button class="btn-settings" title="设置" @onclick="OpenSettings">
                         <i class="fas fa-cog"></i>
                     </button>
                     <button class="btn-toggle-preview" title="切换文件预览" @onclick="ToggleFilePreview">
@@ -131,22 +132,6 @@
     </div>
 </div>
 
-<script>
-    // 平滑滚动到底部
-    window.smoothScrollToBottom = function(elementId) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.scrollTop = element.scrollHeight;
-        }
-    };
-    
-    // 初始化现代UI
-    window.initModernUI = function() {
-        // 可以在这里添加一些UI初始化逻辑
-        console.log('Modern UI initialized');
-    };
-</script>
-
 <!-- 设置弹框 -->
 <SettingsModal IsVisible="@isSettingsVisible" IsVisibleChanged="@OnSettingsVisibilityChanged" OnSettingsSaved="@OnSettingsSaved" />
 
@@ -185,8 +170,17 @@
     
     private async Task CreateNewChat()
     {
+        // 测试抛出异常，看看是否调用了函数。
+        // throw new NotImplementedException();
+        
+        Console.WriteLine("=== CreateNewChat 方法被调用 ===");
+        Logger.LogInformation("=== CreateNewChat 方法被调用 ===");
+
         try
         {
+            Console.WriteLine("开始创建新对话");
+            Logger.LogInformation("开始创建新对话");
+
             // 创建新会话
             var newSession = new ChatSessionInfo
             {
@@ -196,7 +190,7 @@
                 MessageCount = 0,
                 CreatedAt = DateTime.Now
             };
-            
+            System.Console.WriteLine($"创建新对话: 新对话 {chatSessions.Count + 1}");
             chatSessions.Insert(0, newSession);
             
             // 清空当前对话
@@ -208,7 +202,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"创建新对话失败: {ex.Message}");
+            Logger.LogError(ex, "创建新对话失败");
         }
     }
     
@@ -225,7 +219,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"保存当前会话失败: {ex.Message}");
+            Logger.LogError(ex, "保存当前会话失败");
         }
     }
     
@@ -239,7 +233,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"切换会话失败: {ex.Message}");
+            Logger.LogError(ex, "切换会话失败");
         }
     }
 
@@ -278,7 +272,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"删除会话失败: {ex.Message}");
+            Logger.LogError(ex, "删除会话失败");
         }
     }
     
@@ -344,8 +338,11 @@
     
     private void OpenSettings()
     {
+        Console.WriteLine($"OpenSettings called, current isSettingsVisible: {isSettingsVisible}");
         isSettingsVisible = true;
+        Console.WriteLine($"OpenSettings after setting, isSettingsVisible: {isSettingsVisible}");
         StateHasChanged();
+        Console.WriteLine("StateHasChanged called");
     }
     
     private void OpenHelp()

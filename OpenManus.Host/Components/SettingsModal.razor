@@ -3,6 +3,10 @@
 @inject IConfigurationService ConfigurationService
 @inject IJSRuntime JSRuntime
 
+@if (IsVisible)
+{
+    <div class="modal-backdrop show"></div>
+}
 <div class="modal @(IsVisible ? "show" : "")" style="display: @(IsVisible ? "block" : "none")" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
