@@ -1,0 +1,164 @@
+/* 文件预览按钮样式 */
+.file-preview-button-container {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 10px;
+}
+
+.btn-file-preview {
+    background: #2196f3;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.btn-file-preview:hover {
+    background: #1976d2;
+}
+
+/* 文件预览模态框样式 */
+.file-preview-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: flex-end;
+    align-items: stretch;
+    z-index: 1000;
+}
+
+.file-preview-modal-content {
+    background: white;
+    width: 500px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.file-preview-modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+}
+
+.file-preview-modal-header h5 {
+    margin: 0;
+    color: #495057;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.btn-close-modal {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.btn-close-modal:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.file-preview-modal-body {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.file-info {
+    padding: 20px;
+    border-bottom: 1px solid #e9ecef;
+    background: #f8f9fa;
+}
+
+.file-info h6 {
+    margin: 0 0 8px 0;
+    color: #495057;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.file-path {
+    margin: 0;
+    color: #6c757d;
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    word-break: break-all;
+}
+
+.file-content {
+    flex: 1;
+    overflow: auto;
+    padding: 20px;
+}
+
+.file-content pre {
+    margin: 0;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 20px;
+    font-size: 13px;
+    line-height: 1.5;
+    overflow: auto;
+}
+
+.file-content code {
+    background: none;
+    padding: 0;
+    color: #495057;
+    font-family: 'Courier New', monospace;
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.loading-spinner i {
+    font-size: 2rem;
+    margin-bottom: 15px;
+    display: block;
+    color: #2196f3;
+}
+
+.no-file-selected {
+    text-align: center;
+    padding: 80px 40px;
+    color: #6c757d;
+}
+
+.no-file-selected i {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    display: block;
+    opacity: 0.3;
+}
+
+.no-file-selected p {
+    margin: 0;
+    font-size: 16px;
+}

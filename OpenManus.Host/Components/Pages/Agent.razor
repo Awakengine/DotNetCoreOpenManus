@@ -9,9 +9,11 @@
 @rendermode InteractiveServer
 
 <PageTitle>OpenManus Agent</PageTitle>
-<div class="agent-content" style="display:flex;flex-direction:column;height:100vh;position:relative;">
-    <!-- 消息显示区域 -->
-    <div class="messages-container" style="flex:1;overflow-y:auto;padding:20px;padding-bottom:0;">
+<div class="agent-content" style="display:flex;flex-direction:row;height:calc(100vh - 88px);position:relative;">
+    <!-- 主内容区域 -->
+    <div class="main-chat-area" style="flex:1;display:flex;flex-direction:column;position:relative;transition:margin-right 0.3s ease;@(isFilePreviewModalVisible ? "margin-right:400px;" : "")">
+        <!-- 消息显示区域 -->
+    <div class="messages-container" style="flex:1;overflow-y:auto;padding: 20px 20px 150px 20px;height: calc(100% - 220px);">
         @if (agentMemory == null || !agentMemory.Messages.Any())
         {
             <div class="welcome-message">
@@ -125,8 +127,17 @@
         }
     </div>
 
-    @* 固定在Agent页面底部的输入框区域 *@
-    <div class="agent-input-area-fixed" style="position:absolute;bottom:0;left:0;right:0;z-index:1000;background:#1e1e1e;border-top:1px solid #333;padding:15px 20px;">
+        @* 固定在Agent页面底部的输入框区域 *@
+        <div class="agent-input-area-fixed" style="position:absolute;bottom:0;left:0;right:0;z-index:1000;background:#1e1e1e;border-top:1px solid #333;">
+        <!-- 输入框上方的控制按钮 -->
+        <div class="input-controls" style="padding:8px 12px;border-bottom:1px solid #333;">
+            @if (!isFilePreviewModalVisible)
+            {
+                <button class="btn btn-outline-light btn-sm" title="文件预览" @onclick="OpenFilePreviewModal">
+                    <i class="fas fa-expand"></i> 文件预览
+                </button>
+            }
+        </div>
         <div class="input-group align-items-end">
             <label class="btn btn-outline-secondary mb-0 me-2">
                 <i class="fas fa-paperclip"></i>
@@ -162,7 +173,54 @@
                 }
             </div>
         }
+        </div>
     </div>
+
+    <!-- 右侧文件预览面板 -->
+    @if (isFilePreviewModalVisible)
+    {
+        <div class="file-preview-sidebar" style="position:fixed;top:0;right:0;width:400px;height:100vh;background:#1e1e1e;border-left:1px solid #333;z-index:1001;transform:translateX(@(isFilePreviewModalVisible ? "0" : "100%"));transition:transform 0.3s ease;">
+            <div class="sidebar-header" style="padding:15px;border-bottom:1px solid #333;display:flex;justify-content:space-between;align-items:center;">
+                <h5 class="mb-0 text-light">
+                    <i class="fas fa-file-alt"></i> 文件预览
+                </h5>
+                <button type="button" class="btn btn-outline-light btn-sm" @onclick="CloseFilePreviewModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="sidebar-body" style="height:calc(100vh - 70px);overflow:hidden;">
+                <div class="file-preview-content" style="height:100%;display:flex;flex-direction:column;">
+                    @if (currentPreviewFile != null)
+                    {
+                        <div class="file-info" style="padding:15px;border-bottom:1px solid #333;flex-shrink:0;">
+                            <h6 class="text-light"><i class="fas fa-file-alt"></i> @currentPreviewFile.Name</h6>
+                            <p class="file-path text-muted mb-0 small">@currentPreviewFile.Path</p>
+                        </div>
+                        <div class="file-content" style="flex:1;overflow:auto;padding:15px;">
+                            @if (isLoadingFile)
+                            {
+                                <div class="loading-spinner text-center">
+                                    <i class="fas fa-spinner fa-spin fa-2x text-light"></i>
+                                    <p class="mt-2 text-light">正在加载文件内容...</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <pre style="background:#2d2d2d;color:#f8f8f2;padding:15px;border-radius:5px;margin:0;white-space:pre-wrap;word-wrap:break-word;font-size:12px;line-height:1.4;"><code>@currentPreviewFile.Content</code></pre>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="no-file-selected text-center" style="padding:50px;">
+                            <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">选择一个文件进行预览</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @code {
@@ -178,8 +236,20 @@
     private ElementReference textareaRef;
     private InputFile? fileInputRef;
     
+    // 文件预览模态框相关
+    private bool isFilePreviewModalVisible = false;
+    private bool isLoadingFile = false;
+    private FilePreviewInfo? currentPreviewFile;
+    
     // 对话历史相关
     private List<ChatSession> chatSessions = new();
+    
+    public class FilePreviewInfo
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Path { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
+    }
     
     public class ChatSession
     {
@@ -506,5 +576,52 @@
     private void OnFileSelected(InputFileChangeEventArgs e)
     {
         selectedFiles = e.GetMultipleFiles().ToList();
+    }
+    
+    // 文件预览模态框相关方法
+    private void OpenFilePreviewModal()
+    {
+        isFilePreviewModalVisible = true;
+        StateHasChanged();
+    }
+    
+    private void CloseFilePreviewModal()
+    {
+        isFilePreviewModalVisible = false;
+        StateHasChanged();
+    }
+    
+    private async Task LoadFilePreview(string filePath)
+    {
+        isLoadingFile = true;
+        StateHasChanged();
+        
+        try
+        {
+            if (File.Exists(filePath))
+            {
+                var content = await File.ReadAllTextAsync(filePath);
+                currentPreviewFile = new FilePreviewInfo
+                {
+                    Name = Path.GetFileName(filePath),
+                    Path = filePath,
+                    Content = content
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            currentPreviewFile = new FilePreviewInfo
+            {
+                Name = Path.GetFileName(filePath),
+                Path = filePath,
+                Content = $"无法加载文件内容: {ex.Message}"
+            };
+        }
+        finally
+        {
+            isLoadingFile = false;
+            StateHasChanged();
+        }
     }
 }

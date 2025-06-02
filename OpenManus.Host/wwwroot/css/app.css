@@ -3,18 +3,21 @@
 /* 全局样式 */
 html, body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    height: 100%;
+    height: 100vh;
+    max-height: 100vh;
     margin: 0;
     padding: 0;
     background-color: #252526;
     color: #ffffff;
+    overflow: hidden;
 }
 
 .page {
     position: relative;
     display: flex;
     flex-direction: row;
-    min-height: 100vh;
+    height: 100vh;
+    max-height: 100vh;
 }
 
 /* 侧边栏样式 */
@@ -84,8 +87,10 @@ html, body {
     margin-left: 250px;
     flex: 1;
     background-color: #252526;
-    min-height: 100vh;
+    height: 100vh;
+    max-height: 100vh;
     padding: 2rem;
+    overflow-y: auto;
 }
 
 /* 文件浏览器样式 */

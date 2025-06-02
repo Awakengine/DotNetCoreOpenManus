@@ -64,71 +64,21 @@
     </div>
 
     <!-- 右侧内容区域 -->
-    <div class="content-area">
-        <!-- 对话内容区 -->
-        <div class="chat-content-panel">
-            <div class="panel-header">
-                <h5 class="panel-title">@GetCurrentSessionTitle()</h5>
-                <div class="chat-controls">
-                    <button class="btn-clear" title="清空对话" @onclick="ClearCurrentSession">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                    <button class="btn-settings" title="设置" @onclick="OpenSettings">
-                        <i class="fas fa-cog"></i>
-                    </button>
-                    <button class="btn-toggle-preview" title="切换文件预览" @onclick="ToggleFilePreview">
-                        <i class="fas fa-file-alt"></i>
-                    </button>
-                </div>
-            </div>
-            <main class="main-content">
-                @Body
-            </main>
-        </div>
-
-        <!-- 右侧文件预览区 -->
-        <div class="file-preview-panel @(isFilePreviewVisible ? "" : "collapsed")" id="filePreviewPanel">
-            <div class="panel-header">
-                <h5 class="panel-title">文件预览</h5>
-                <div class="panel-controls">
-                    <button class="btn-dock" title="停靠/取消停靠" @onclick="ToggleDockMode">
-                        <i class="fas @(isDocked ? "fa-expand" : "fa-thumbtack")"></i>
-                    </button>
-                    <button class="btn-collapse" title="折叠" @onclick="ToggleFilePreview">
-                        <i class="fas @(isFilePreviewVisible ? "fa-chevron-right" : "fa-chevron-left")"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="file-preview-content">
-                @if (currentPreviewFile != null)
-                {
-                    <div class="file-info">
-                        <h6><i class="fas fa-file-alt"></i> @currentPreviewFile.Name</h6>
-                        <p class="file-path">@currentPreviewFile.Path</p>
-                    </div>
-                    <div class="file-content">
-                        @if (isLoadingFile)
-                        {
-                            <div class="loading-spinner">
-                                <i class="fas fa-spinner fa-spin"></i>
-                                <p>正在加载文件内容...</p>
-                            </div>
-                        }
-                        else
-                        {
-                            <pre><code>@currentPreviewFile.Content</code></pre>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <div class="no-file-selected">
-                        <i class="fas fa-file-alt"></i>
-                        <p>选择一个文件进行预览</p>
-                    </div>
-                }
+    <div class="chat-content-panel">
+        <div class="panel-header">
+            <h5 class="panel-title">@GetCurrentSessionTitle()</h5>
+            <div class="chat-controls">
+                <button class="btn-clear" title="清空对话" @onclick="ClearCurrentSession">
+                    <i class="fas fa-trash"></i>
+                </button>
+                <button class="btn-settings" title="设置" @onclick="OpenSettings">
+                    <i class="fas fa-cog"></i>
+                </button>
             </div>
         </div>
+        <main class="main-content">
+            @Body
+        </main>
     </div>
 </div>
 
@@ -138,18 +88,7 @@
 @code {
     private List<ChatSessionInfo> chatSessions = new();
     private string currentSessionId = "default-session";
-    private bool isFilePreviewVisible = true;
-    private bool isDocked = false;
-    private bool isLoadingFile = false;
-    private FilePreviewInfo? currentPreviewFile;
     private bool isSettingsVisible = false;
-    
-    public class FilePreviewInfo
-    {
-        public string Name { get; set; } = string.Empty;
-        public string Path { get; set; } = string.Empty;
-        public string Content { get; set; } = string.Empty;
-    }
     
     protected override async Task OnInitializedAsync()
     {
@@ -289,52 +228,13 @@
         StateHasChanged();
     }
     
-    private void ToggleFilePreview()
-    {
-        isFilePreviewVisible = !isFilePreviewVisible;
-        StateHasChanged();
-    }
+
     
-    private void ToggleDockMode()
-    {
-        isDocked = !isDocked;
-        StateHasChanged();
-    }
+
     
-    // JavaScript互操作方法已移除，改为直接使用实例方法
+
     
-    // 实例方法用于显示文件预览
-    public async Task ShowFilePreview(string fileName, string filePath, string content = "")
-    {
-        isLoadingFile = true;
-        isFilePreviewVisible = true;
-        
-        currentPreviewFile = new FilePreviewInfo
-        {
-            Name = fileName,
-            Path = filePath,
-            Content = content
-        };
-        
-        StateHasChanged();
-        
-        // 模拟加载文件内容
-        if (string.IsNullOrEmpty(content))
-        {
-            await Task.Delay(1000); // 模拟加载时间
-            currentPreviewFile.Content = $"// 文件内容示例\n// 文件: {fileName}\n// 路径: {filePath}\n\n// 这里显示实际的文件内容\nconsole.log('Hello from {fileName}');";
-        }
-        
-        isLoadingFile = false;
-        StateHasChanged();
-    }
-    
-    public void CloseFilePreview()
-    {
-        currentPreviewFile = null;
-        isFilePreviewVisible = false;
-        StateHasChanged();
-    }
+
     
     private void OpenSettings()
     {
