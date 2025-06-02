@@ -1,3 +1,8 @@
+@* 
+    设置模态框组件 - 用于配置应用程序的各种设置选项
+    包括主题设置、语言设置、LLM模型配置等功能
+    提供表单验证、数据绑定和设置保存功能
+*@
 @using OpenManus.Host.Models
 @using OpenManus.Host.Services
 @inject IConfigurationService ConfigurationService
@@ -86,17 +91,37 @@
 }
 
 @code {
+    /// <summary>
+    /// 模态框是否可见
+    /// </summary>
     [Parameter] public bool IsVisible { get; set; }
+    
+    /// <summary>
+    /// 可见状态变化回调
+    /// </summary>
     [Parameter] public EventCallback<bool> IsVisibleChanged { get; set; }
+    
+    /// <summary>
+    /// 设置保存完成回调
+    /// </summary>
     [Parameter] public EventCallback OnSettingsSaved { get; set; }
     
+    /// <summary>
+    /// 应用设置对象
+    /// </summary>
     private AppSettings settings = new();
     
+    /// <summary>
+    /// 组件初始化时加载设置
+    /// </summary>
     protected override void OnInitialized()
     {
         LoadSettings();
     }
     
+    /// <summary>
+    /// 从配置服务加载当前设置
+    /// </summary>
     private void LoadSettings()
     {
         var currentSettings = ConfigurationService.GetAppSettings();
@@ -115,6 +140,10 @@
         };
     }
     
+    /// <summary>
+    /// 保存设置到配置服务
+    /// </summary>
+    /// <returns>异步任务</returns>
     private async Task SaveSettings()
     {
         try
@@ -130,6 +159,10 @@
         }
     }
     
+    /// <summary>
+    /// 关闭设置模态框
+    /// </summary>
+    /// <returns>异步任务</returns>
     private async Task Close()
     {
         IsVisible = false;

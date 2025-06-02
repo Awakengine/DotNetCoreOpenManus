@@ -89,6 +89,7 @@ public class ChatService
         {
             File.Delete(filePath);
         }
+        await Task.Delay(1);
     }
 
     /// <summary>

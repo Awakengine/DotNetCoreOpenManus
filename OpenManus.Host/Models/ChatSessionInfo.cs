@@ -1,7 +1,10 @@
+using System;
+
 namespace OpenManus.Host.Models;
 
 /// <summary>
 /// 聊天会话信息类
+/// 用于存储和管理聊天会话的基本信息，包括会话标识、标题、活动时间等
 /// </summary>
 public class ChatSessionInfo
 {

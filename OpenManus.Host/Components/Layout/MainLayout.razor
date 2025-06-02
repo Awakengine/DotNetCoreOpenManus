@@ -1,4 +1,10 @@
+@* 
+    主布局组件 - 应用程序的主要布局结构
+    包含左侧对话历史面板和右侧内容区域
+    提供会话管理、设置和导航功能
+*@
 @using Microsoft.AspNetCore.Components.Web
+@using OpenManus.Host.Models
 @using OpenManus.Host.Services
 @using OpenManus.Host.Components
 @namespace OpenManus.Host.Components.Layout
@@ -86,18 +92,33 @@
 <SettingsModal IsVisible="@isSettingsVisible" IsVisibleChanged="@OnSettingsVisibilityChanged" OnSettingsSaved="@OnSettingsSaved" />
 
 @code {
+    /// <summary>
+    /// 聊天会话列表
+    /// </summary>
     private List<ChatSessionInfo> chatSessions = new();
+    
+    /// <summary>
+    /// 当前会话ID
+    /// </summary>
     private string currentSessionId = "default-session";
+    
+    /// <summary>
+    /// 设置模态框是否可见
+    /// </summary>
     private bool isSettingsVisible = false;
     
+    /// <summary>
+    /// 组件初始化时执行
+    /// 创建默认会话并初始化会话列表
+    /// </summary>
     protected override async Task OnInitializedAsync()
     {
-        // 临时简化实现
+        // 初始化默认会话
         chatSessions = new List<ChatSessionInfo>
         {
             new ChatSessionInfo
             {
-                        Id = Guid.NewGuid().ToString(),
+                Id = "default-session",
                 Title = "当前对话",
                 LastActivity = DateTime.Now,
                 MessageCount = 0,
@@ -105,8 +126,14 @@
             }
         };
         StateHasChanged();
+        
+        await Task.Delay(1);
     }
     
+    /// <summary>
+    /// 创建新的聊天会话
+    /// 生成新的会话ID，清空消息历史，并导航到新会话
+    /// </summary>
     private async Task CreateNewChat()
     {
         // 测试抛出异常，看看是否调用了函数。
@@ -145,6 +172,10 @@
         }
     }
     
+    /// <summary>
+    /// 保存当前会话的消息
+    /// 更新会话元数据，消息通过ChatService自动保存
+    /// </summary>
     private void SaveCurrentSessionMessages()
     {
         try
@@ -162,6 +193,11 @@
         }
     }
     
+    /// <summary>
+    /// 切换到指定的会话
+    /// 更新当前会话ID并导航到对应页面
+    /// </summary>
+    /// <param name="sessionId">要切换到的会话ID</param>
     private void SwitchToSession(string sessionId)
     {
         try
@@ -176,6 +212,11 @@
         }
     }
 
+    /// <summary>
+    /// 删除指定的会话
+    /// 如果删除的是当前会话，则自动切换到其他会话或创建新会话
+    /// </summary>
+    /// <param name="sessionId">要删除的会话ID</param>
     private void DeleteSession(string sessionId)
     {
         try
@@ -215,12 +256,21 @@
         }
     }
     
+    /// <summary>
+    /// 获取当前会话的标题
+    /// 如果找不到会话则返回默认标题
+    /// </summary>
+    /// <returns>会话标题</returns>
     private string GetCurrentSessionTitle()
     {
         var session = chatSessions.FirstOrDefault(s => s.Id == currentSessionId);
         return session?.Title ?? "AI 助手";
     }
     
+    /// <summary>
+    /// 清空当前会话的内容
+    /// 调用AgentService清空会话消息
+    /// </summary>
     private void ClearCurrentSession()
     {
         // 这里可以添加清空当前会话的逻辑
@@ -228,14 +278,10 @@
         StateHasChanged();
     }
     
-
-    
-
-    
-
-    
-
-    
+    /// <summary>
+    /// 打开设置模态框
+    /// 设置可见性状态并刷新UI
+    /// </summary>
     private void OpenSettings()
     {
         Console.WriteLine($"OpenSettings called, current isSettingsVisible: {isSettingsVisible}");
@@ -245,6 +291,10 @@
         Console.WriteLine("StateHasChanged called");
     }
     
+    /// <summary>
+    /// 打开帮助页面或帮助模态框
+    /// 提供用户使用指导
+    /// </summary>
     private void OpenHelp()
     {
         // 这里可以添加打开帮助页面的逻辑
@@ -252,16 +302,28 @@
         Console.WriteLine("打开帮助");
     }
     
+    /// <summary>
+    /// 设置模态框可见性变化时的回调
+    /// 更新本地状态并刷新UI
+    /// </summary>
+    /// <param name="isVisible">模态框是否可见</param>
     private async Task OnSettingsVisibilityChanged(bool isVisible)
     {
         isSettingsVisible = isVisible;
         StateHasChanged();
+            await Task.Delay(1);
     }
     
+    /// <summary>
+    /// 设置保存后的处理逻辑
+    /// 重新加载配置或更新UI
+    /// </summary>
     private async Task OnSettingsSaved()
     {
         // 设置保存后的处理逻辑
         // 可以在这里重新加载配置或更新UI
         StateHasChanged();
+        await Task.Delay(1);
+
     }
 }

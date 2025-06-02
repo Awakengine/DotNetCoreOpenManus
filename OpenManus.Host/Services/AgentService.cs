@@ -342,6 +342,10 @@ When you need to use a tool, clearly indicate which tool you're using and why.";
         }
     }
     
+    /// <summary>
+    /// 获取所有可用的代理工具
+    /// </summary>
+    /// <returns>代理工具列表</returns>
     public List<IAgentTool> GetAvailableTools()
     {
         return _tools.ToList();

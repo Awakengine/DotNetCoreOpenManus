@@ -33,7 +33,12 @@
         }
         else
         {
-            @* 内容流式输出展示区，实时滚动定位到底部 *@
+            @* 
+    AI代理主页面组件 - 应用程序的核心交互界面
+    提供与AI代理的对话功能、文件预览、任务执行状态显示
+    支持多会话管理、实时消息流、工具调用结果展示和文件操作
+*@
+@* 内容流式输出展示区，实时滚动定位到底部 *@
             <div class="agent-messages" id="agentMessages">
                 @foreach (var message in agentMemory.Messages.Where(m => m.Role != "system"))
                 {
@@ -127,53 +132,21 @@
         }
     </div>
 
-        @* 固定在Agent页面底部的输入框区域 *@
-        <div class="agent-input-area-fixed" style="position:absolute;bottom:0;left:0;right:0;z-index:1000;background:#1e1e1e;border-top:1px solid #333;">
-        <!-- 输入框上方的控制按钮 -->
-        <div class="input-controls" style="padding:8px 12px;border-bottom:1px solid #333;">
-            @if (!isFilePreviewModalVisible)
-            {
-                <button class="btn btn-outline-light btn-sm" title="文件预览" @onclick="OpenFilePreviewModal">
-                    <i class="fas fa-expand"></i> 文件预览
-                </button>
-            }
-        </div>
-        <div class="input-group align-items-end">
-            <label class="btn btn-outline-secondary mb-0 me-2">
-                <i class="fas fa-paperclip"></i>
-                <InputFile OnChange="OnFileSelected" multiple style="display:none" @ref="fileInputRef" />
-            </label>
-            <textarea class="form-control" 
-                      placeholder="输入您的消息...（Shift+Enter 换行）" 
-                      @bind="currentMessage"
-                      @bind:event="oninput"
-                      @onkeydown="@(e => HandleKeyPress(e))"
-                      disabled="@isProcessing" 
-                      rows="1" 
-                      @ref="textareaRef"></textarea>
-            <button class="btn btn-primary" @onclick="ExecuteTask" disabled="@(isProcessing || string.IsNullOrWhiteSpace(currentMessage))">
-                @if (isProcessing)
-                {
-                    <i class="fas fa-spinner fa-spin"></i>
-                }
-                else
-                {
-                    <i class="fas fa-paper-plane"></i>
-                }
-                执行任务
-            </button>
-        </div>
-        @if (selectedFiles?.Count > 0)
-        {
-            <div class="mt-2">
-                <span>已选择附件：</span>
-                @foreach (var file in selectedFiles)
-                {
-                    <span class="badge bg-secondary me-1">@file.Name</span>
-                }
-            </div>
-        }
-        </div>
+        @* 
+    AI代理主页面组件 - 应用程序的核心交互界面
+    提供与AI代理的对话功能、文件预览、任务执行状态显示
+    支持多会话管理、实时消息流、工具调用结果展示和文件操作
+*@
+@* 固定在Agent页面底部的输入框区域 *@
+        <AgentInputArea CurrentMessage="@currentMessage" 
+                       CurrentMessageChanged="@(value => currentMessage = value)"
+                       IsProcessing="@isProcessing"
+                       IsFilePreviewVisible="@isFilePreviewModalVisible"
+                       SelectedFiles="@selectedFiles"
+                       OnExecuteTask="@(() => ExecuteTask())"
+                       OnOpenFilePreview="@(() => OpenFilePreviewModal())"
+                       OnFileSelected="@((e) => OnFileSelected(e))"
+                       OnKeyPress="@(async (e) => await HandleKeyPress(e))" />
     </div>
 
     <!-- 右侧文件预览面板 -->
@@ -224,41 +197,117 @@
 </div>
 
 @code {
+    /// <summary>
+    /// 会话ID参数
+    /// </summary>
     [Parameter] public string? SessionId { get; set; }
     
+    /// <summary>
+    /// 可用的代理工具列表
+    /// </summary>
     private List<OpenManus.Host.Services.Tools.IAgentTool> availableTools = new();
-    private AgentMemory? agentMemory;
-    private AgentExecutionResult? currentExecution;
-    private string currentMessage = string.Empty;
-    private bool isProcessing = false;
-    private string currentSessionId = "agent-session";
-    private Dictionary<string, AgentMemory> sessionMemories = new();
-    private ElementReference textareaRef;
-    private InputFile? fileInputRef;
     
-    // 文件预览模态框相关
+    /// <summary>
+    /// 代理记忆对象
+    /// </summary>
+    private AgentMemory? agentMemory;
+    
+    /// <summary>
+    /// 当前执行结果
+    /// </summary>
+    private AgentExecutionResult? currentExecution;
+    
+    /// <summary>
+    /// 当前输入的消息
+    /// </summary>
+    private string currentMessage = string.Empty;
+    
+    /// <summary>
+    /// 是否正在处理任务
+    /// </summary>
+    private bool isProcessing = false;
+    
+    /// <summary>
+    /// 当前会话ID
+    /// </summary>
+    private string currentSessionId = "agent-session";
+    
+    /// <summary>
+    /// 会话记忆字典，存储多个会话的记忆
+    /// </summary>
+    private Dictionary<string, AgentMemory> sessionMemories = new();
+
+    /// <summary>
+    /// 文件预览模态框是否可见
+    /// </summary>
     private bool isFilePreviewModalVisible = false;
+    
+    /// <summary>
+    /// 是否正在加载文件
+    /// </summary>
     private bool isLoadingFile = false;
+    
+    /// <summary>
+    /// 当前预览的文件信息
+    /// </summary>
     private FilePreviewInfo? currentPreviewFile;
     
-    // 对话历史相关
+    /// <summary>
+    /// 对话会话列表
+    /// </summary>
     private List<ChatSession> chatSessions = new();
     
+    /// <summary>
+    /// 文件预览信息类
+    /// </summary>
     public class FilePreviewInfo
     {
+        /// <summary>
+        /// 文件名
+        /// </summary>
         public string Name { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// 文件路径
+        /// </summary>
         public string Path { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// 文件内容
+        /// </summary>
         public string Content { get; set; } = string.Empty;
     }
     
+    /// <summary>
+    /// 聊天会话类
+    /// </summary>
     public class ChatSession
     {
+        /// <summary>
+        /// 会话ID
+        /// </summary>
         public string Id { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// 会话标题
+        /// </summary>
         public string Title { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// 最后活动时间
+        /// </summary>
         public DateTime LastActivity { get; set; }
+        
+        /// <summary>
+        /// 消息数量
+        /// </summary>
         public int MessageCount { get; set; }
     }
 
+    /// <summary>
+    /// 组件初始化时的异步方法
+    /// </summary>
+    /// <returns>异步任务</returns>
     protected override async Task OnInitializedAsync()
     {
         await Task.CompletedTask; // 避免async警告
@@ -278,6 +327,10 @@
         LoadChatSessions();
     }
     
+    /// <summary>
+    /// 当组件参数设置时调用的方法
+    /// </summary>
+    /// <returns>任务</returns>
     protected override Task OnParametersSetAsync()
     {
         // 当参数变化时更新会话
@@ -290,6 +343,10 @@
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// 执行用户任务的异步方法
+    /// </summary>
+    /// <returns>异步任务</returns>
     private async Task ExecuteTask()
     {
         if (string.IsNullOrWhiteSpace(currentMessage) || isProcessing)
@@ -351,26 +408,22 @@
         }
     }
 
+    /// <summary>
+    /// 处理键盘按键事件
+    /// </summary>
+    /// <param name="e">键盘事件参数</param>
+    /// <returns>异步任务</returns>
     private async Task HandleKeyPress(KeyboardEventArgs e)
     {
-        // Shift+Enter 换行，Enter 发送
-        if (e.Key == "Enter" && e.ShiftKey)
-        {
-            await Task.Delay(10); // 等待内容更新
-            await JSRuntime.InvokeVoidAsync("autoResizeTextarea", textareaRef);
-        }
-        else if (e.Key == "Enter" && !e.ShiftKey && !isProcessing)
-        {
-            await ExecuteTask();
-        }
+        // 按键处理现在主要在AgentInputArea组件中进行
+        // 这里保留方法以供组件回调使用
+        await Task.CompletedTask;
     }
 
-    private async Task OnTextareaInput()
-    {
-        // 每次输入时自动调整 textarea 高度
-        await JSRuntime.InvokeVoidAsync("autoResizeTextarea", textareaRef);
-    }
-
+    /// <summary>
+    /// 清空当前会话的异步方法
+    /// </summary>
+    /// <returns>异步任务</returns>
     private async Task ClearSession()
     {
         await Task.CompletedTask; // 避免async警告
@@ -388,6 +441,11 @@
         StateHasChanged();
     }
 
+    /// <summary>
+    /// 根据消息角色获取对应的CSS类名
+    /// </summary>
+    /// <param name="role">消息角色</param>
+    /// <returns>CSS类名</returns>
     private string GetMessageClass(string role)
     {
         return role switch
@@ -399,19 +457,30 @@
         };
     }
 
+    /// <summary>
+    /// 格式化消息内容
+    /// </summary>
+    /// <param name="content">原始消息内容</param>
+    /// <returns>格式化后的HTML内容</returns>
     private string FormatMessageContent(string content)
     {
         // 简单的格式化 - 将换行符转换为HTML
         return content.Replace("\n", "<br/>");
     }
 
+    /// <summary>
+    /// 滚动到消息底部的异步方法
+    /// </summary>
+    /// <returns>异步任务</returns>
     private async Task ScrollToBottom()
     {
         await Task.Delay(100);
         await JSRuntime.InvokeVoidAsync("smoothScrollToBottom", "agent-messages");
     }
     
-    // 对话历史管理方法
+    /// <summary>
+    /// 加载聊天会话列表
+    /// </summary>
     private void LoadChatSessions()
     {
         // 这里可以从持久化存储加载对话历史
@@ -435,6 +504,9 @@
         };
     }
     
+    /// <summary>
+    /// 加载当前会话的记忆
+    /// </summary>
     private void LoadSessionMemory()
     {
         // 加载当前会话的记忆
@@ -452,6 +524,9 @@
         }
     }
     
+    /// <summary>
+    /// 保存当前会话的记忆
+    /// </summary>
     private void SaveSessionMemory()
     {
         // 保存当前会话的记忆
@@ -461,6 +536,10 @@
         }
     }
     
+    /// <summary>
+    /// 开始新的聊天会话
+    /// </summary>
+    /// <returns>异步任务</returns>
     private async Task StartNewChat()
     {
         var newSessionId = $"session-{DateTime.Now.Ticks}";
@@ -483,6 +562,11 @@
         await Task.CompletedTask;
     }
     
+    /// <summary>
+    /// 切换到指定的会话
+    /// </summary>
+    /// <param name="sessionId">会话ID</param>
+    /// <returns>异步任务</returns>
     private async Task SwitchToSession(string sessionId)
     {
         currentSessionId = sessionId;
@@ -493,7 +577,12 @@
         await Task.CompletedTask;
     }
     
-    // 文件预览方法
+    /// <summary>
+    /// 显示文件预览
+    /// </summary>
+    /// <param name="fileName">文件名</param>
+    /// <param name="filePath">文件路径</param>
+    /// <returns>异步任务</returns>
     private async Task ShowFilePreview(string fileName, string filePath)
     {
         try
@@ -512,6 +601,11 @@
         }
     }
     
+    /// <summary>
+    /// 加载文件内容
+    /// </summary>
+    /// <param name="filePath">文件路径</param>
+    /// <returns>文件内容字符串</returns>
     private async Task<string> LoadFileContent(string filePath)
     {
         // 这里应该实现实际的文件读取逻辑
@@ -521,13 +615,21 @@
         return $"// 文件内容示例\n// 文件路径: {filePath}\n// 加载时间: {DateTime.Now}\n\n// 这里是文件的实际内容\nconsole.log('Hello from {System.IO.Path.GetFileName(filePath)}');";
     }
     
+    /// <summary>
+    /// 关闭文件预览
+    /// </summary>
+    /// <returns>异步任务</returns>
     private async Task CloseFilePreview()
     {
         // 通过JavaScript关闭MainLayout的文件预览面板
         await JSRuntime.InvokeVoidAsync("closeFilePreview");
     }
     
-    // 文件引用检测方法
+    /// <summary>
+    /// 检测内容中是否包含文件引用
+    /// </summary>
+    /// <param name="content">要检测的内容</param>
+    /// <returns>是否包含文件引用</returns>
     private bool ContainsFileReference(string content)
     {
         // 简单的文件引用检测，可以根据实际需求调整
@@ -537,6 +639,11 @@
                content.Contains(".txt") || content.Contains(".json");
     }
     
+    /// <summary>
+    /// 从内容中提取文件引用
+    /// </summary>
+    /// <param name="content">要分析的内容</param>
+    /// <returns>文件引用列表</returns>
     private List<(string Name, string Path)> ExtractFileReferences(string content)
     {
         var fileRefs = new List<(string Name, string Path)>();
@@ -559,6 +666,11 @@
         return fileRefs;
      }
      
+     /// <summary>
+     /// 组件渲染完成后的异步方法
+     /// </summary>
+     /// <param name="firstRender">是否为首次渲染</param>
+     /// <returns>异步任务</returns>
      protected override async Task OnAfterRenderAsync(bool firstRender)
      {
         if (firstRender)
@@ -571,26 +683,43 @@
             await JSRuntime.InvokeVoidAsync("scrollToBottom", "agentMessages");
         }
     }
+    /// <summary>
+    /// 已选择的文件列表
+    /// </summary>
     private List<IBrowserFile> selectedFiles = new();
 
+    /// <summary>
+    /// 文件选择事件处理方法
+    /// </summary>
+    /// <param name="e">文件选择事件参数</param>
     private void OnFileSelected(InputFileChangeEventArgs e)
     {
         selectedFiles = e.GetMultipleFiles().ToList();
     }
     
-    // 文件预览模态框相关方法
+    /// <summary>
+    /// 打开文件预览模态框
+    /// </summary>
     private void OpenFilePreviewModal()
     {
         isFilePreviewModalVisible = true;
         StateHasChanged();
     }
     
+    /// <summary>
+    /// 关闭文件预览模态框
+    /// </summary>
     private void CloseFilePreviewModal()
     {
         isFilePreviewModalVisible = false;
         StateHasChanged();
     }
     
+    /// <summary>
+    /// 加载文件预览内容
+    /// </summary>
+    /// <param name="filePath">文件路径</param>
+    /// <returns>异步任务</returns>
     private async Task LoadFilePreview(string filePath)
     {
         isLoadingFile = true;

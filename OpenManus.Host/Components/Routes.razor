@@ -1,6 +1,12 @@
-﻿<Router AppAssembly="typeof(Program).Assembly">
+@* 
+    路由配置组件 - 定义应用程序的路由规则和导航行为
+    使用MainLayout作为默认布局，并在导航时自动聚焦到h1元素
+*@
+<Router AppAssembly="typeof(Program).Assembly">
     <Found Context="routeData">
+        <!-- 路由视图 - 使用MainLayout作为默认布局 -->
         <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+        <!-- 导航时的焦点管理 - 自动聚焦到h1元素以提升可访问性 -->
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
 </Router>
