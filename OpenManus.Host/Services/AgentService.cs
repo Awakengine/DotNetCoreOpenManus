@@ -60,7 +60,7 @@ public class AgentService
     /// <param name="userMessage">用户消息</param>
     /// <param name="maxSteps">最大执行步数</param>
     /// <returns>代理执行结果</returns>
-    public async Task<AgentExecutionResult> ExecuteTaskAsync(string sessionId, string userMessage, int maxSteps = 10)
+    public async Task<AgentExecutionResult> ExecuteTaskAsync(string sessionId, string userMessage, int maxSteps = 1000)
     {
         var memory = GetOrCreateSession(sessionId);
         memory.AddMessage("user", userMessage);

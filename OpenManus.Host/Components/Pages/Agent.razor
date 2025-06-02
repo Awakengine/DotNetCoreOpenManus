@@ -9,9 +9,9 @@
 @rendermode InteractiveServer
 
 <PageTitle>OpenManus Agent</PageTitle>
-
-<div class="agent-content">
-
+<div class="agent-content" style="display:flex;flex-direction:column;height:100vh;position:relative;">
+    <!-- 消息显示区域 -->
+    <div class="messages-container" style="flex:1;overflow-y:auto;padding:20px;padding-bottom:0;">
         @if (agentMemory == null || !agentMemory.Messages.Any())
         {
             <div class="welcome-message">
@@ -31,6 +31,7 @@
         }
         else
         {
+            @* 内容流式输出展示区，实时滚动定位到底部 *@
             <div class="agent-messages" id="agentMessages">
                 @foreach (var message in agentMemory.Messages.Where(m => m.Role != "system"))
                 {
@@ -122,44 +123,46 @@
                 }
             </div>
         }
+    </div>
 
-        <div class="agent-input-area">
-            <div class="input-group align-items-end">
-                <label class="btn btn-outline-secondary mb-0 me-2">
-                    <i class="fas fa-paperclip"></i>
-                    <InputFile OnChange="OnFileSelected" multiple style="display:none" @ref="fileInputRef" />
-                </label>
-                <textarea class="form-control" 
-                          placeholder="输入您的消息...（Shift+Enter 换行）" 
-                          @bind="currentMessage"
-                          @bind:event="oninput"
-                          @onkeydown="@(e => HandleKeyPress(e))"
-                          disabled="@isProcessing" 
-                          rows="1" 
-                          @ref="textareaRef"></textarea>
-                <button class="btn btn-primary" @onclick="ExecuteTask" disabled="@(isProcessing || string.IsNullOrWhiteSpace(currentMessage))">
-                    @if (isProcessing)
-                    {
-                        <i class="fas fa-spinner fa-spin"></i>
-                    }
-                    else
-                    {
-                        <i class="fas fa-paper-plane"></i>
-                    }
-                    执行任务
-                </button>
-            </div>
-            @if (selectedFiles?.Count > 0)
-            {
-                <div class="mt-2">
-                    <span>已选择附件：</span>
-                    @foreach (var file in selectedFiles)
-                    {
-                        <span class="badge bg-secondary me-1">@file.Name</span>
-                    }
-                </div>
-            }
+    @* 固定在Agent页面底部的输入框区域 *@
+    <div class="agent-input-area-fixed" style="position:absolute;bottom:0;left:0;right:0;z-index:1000;background:#1e1e1e;border-top:1px solid #333;padding:15px 20px;">
+        <div class="input-group align-items-end">
+            <label class="btn btn-outline-secondary mb-0 me-2">
+                <i class="fas fa-paperclip"></i>
+                <InputFile OnChange="OnFileSelected" multiple style="display:none" @ref="fileInputRef" />
+            </label>
+            <textarea class="form-control" 
+                      placeholder="输入您的消息...（Shift+Enter 换行）" 
+                      @bind="currentMessage"
+                      @bind:event="oninput"
+                      @onkeydown="@(e => HandleKeyPress(e))"
+                      disabled="@isProcessing" 
+                      rows="1" 
+                      @ref="textareaRef"></textarea>
+            <button class="btn btn-primary" @onclick="ExecuteTask" disabled="@(isProcessing || string.IsNullOrWhiteSpace(currentMessage))">
+                @if (isProcessing)
+                {
+                    <i class="fas fa-spinner fa-spin"></i>
+                }
+                else
+                {
+                    <i class="fas fa-paper-plane"></i>
+                }
+                执行任务
+            </button>
         </div>
+        @if (selectedFiles?.Count > 0)
+        {
+            <div class="mt-2">
+                <span>已选择附件：</span>
+                @foreach (var file in selectedFiles)
+                {
+                    <span class="badge bg-secondary me-1">@file.Name</span>
+                }
+            </div>
+        }
+    </div>
 </div>
 
 @code {
@@ -173,7 +176,7 @@
     private string currentSessionId = "agent-session";
     private Dictionary<string, AgentMemory> sessionMemories = new();
     private ElementReference textareaRef;
-    private InputFile fileInputRef;
+    private InputFile? fileInputRef;
     
     // 对话历史相关
     private List<ChatSession> chatSessions = new();
@@ -223,29 +226,58 @@
             return;
 
         isProcessing = true;
-        var message = currentMessage;
+        var userMessage = currentMessage.Trim();
         currentMessage = string.Empty;
-        
+
         try
         {
-            currentExecution = await AgentService.ExecuteTaskAsync(currentSessionId, message);
-            agentMemory = AgentService.GetSession(currentSessionId);
+            // 获取或创建当前会话的内存
+            if (!sessionMemories.ContainsKey(currentSessionId))
+            {
+                sessionMemories[currentSessionId] = new AgentMemory();
+            }
+            agentMemory = sessionMemories[currentSessionId];
+
+            // 添加用户消息
+            agentMemory.AddMessage("user", userMessage);
             
-            // 保存会话记忆
-            SaveSessionMemory();
+            // 强制UI更新
+            await InvokeAsync(StateHasChanged);
             
-            StateHasChanged();
-            await ScrollToBottom();
+            // 滚动到底部
+            await Task.Delay(100); // 等待DOM更新
+            await JSRuntime.InvokeVoidAsync("smoothScrollToBottom", "agentMessages");
+
+            // 执行任务
+            var result = await AgentService.ExecuteTaskAsync(SessionId ?? currentSessionId, userMessage);
+            
+            // 更新执行状态
+            currentExecution = result;
+            
+            // 如果有最终结果，添加到消息历史
+            if (!string.IsNullOrEmpty(result.FinalResult))
+            {
+                agentMemory.AddMessage("assistant", result.FinalResult);
+            }
+            
+            // 强制UI更新
+            await InvokeAsync(StateHasChanged);
+            
+            // 再次滚动到底部
+            await Task.Delay(100); // 等待DOM更新
+            await JSRuntime.InvokeVoidAsync("smoothScrollToBottom", "agentMessages");
         }
         catch (Exception ex)
         {
-            // 处理错误
-            Console.WriteLine($"Error executing task: {ex.Message}");
+            agentMemory?.AddMessage("assistant", $"执行任务时发生错误: {ex.Message}");
+            await InvokeAsync(StateHasChanged);
+            await Task.Delay(100);
+            await JSRuntime.InvokeVoidAsync("smoothScrollToBottom", "agentMessages");
         }
         finally
         {
             isProcessing = false;
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -462,6 +494,11 @@
         if (firstRender)
         {
             await JSRuntime.InvokeVoidAsync("initModernUI");
+        }
+        // 每次渲染后自动滚动到底部（仅有消息时）
+        if (agentMemory != null && agentMemory.Messages.Any())
+        {
+            await JSRuntime.InvokeVoidAsync("scrollToBottom", "agentMessages");
         }
     }
     private List<IBrowserFile> selectedFiles = new();

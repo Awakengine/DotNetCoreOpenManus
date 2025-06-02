@@ -9,8 +9,7 @@
 .agent-content {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    min-height: 100vh;
+    height: auto;
     background: inherit;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 20px;

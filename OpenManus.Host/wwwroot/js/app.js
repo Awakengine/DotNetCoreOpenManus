@@ -101,10 +101,19 @@ window.initModernUI = () => {
 window.smoothScrollToBottom = (elementId) => {
     const element = document.getElementById(elementId);
     if (element) {
-        element.scrollTo({
-            top: element.scrollHeight,
-            behavior: 'smooth'
-        });
+        // 如果是消息容器，滚动其父容器
+        const container = element.closest('.messages-container');
+        if (container) {
+            container.scrollTo({
+                top: container.scrollHeight,
+                behavior: 'smooth'
+            });
+        } else {
+            element.scrollTo({
+                top: element.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
     }
 };
 
