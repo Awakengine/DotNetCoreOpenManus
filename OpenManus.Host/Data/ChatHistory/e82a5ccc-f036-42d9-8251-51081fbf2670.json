@@ -1,0 +1,68 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "请使用中文回答",
+      "timestamp": "2025-06-03T09:15:15.1290929Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "role": "user",
+      "content": "请使用中文回答",
+      "timestamp": "2025-06-03T09:15:15.1293328Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "timestamp": "2025-06-03T09:15:15.2336602Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "timestamp": "2025-06-03T09:15:19.8464245Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "role": "user",
+      "content": "今天天气",
+      "timestamp": "2025-06-03T09:15:31.2530691Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "role": "user",
+      "content": "今天天气",
+      "timestamp": "2025-06-03T09:15:31.2530708Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "timestamp": "2025-06-03T09:15:31.3574838Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "timestamp": "2025-06-03T09:15:35.2055717Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    }
+  ]
+}

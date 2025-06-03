@@ -80,10 +80,20 @@ public class AgentService
         
         try
         {
+            var totalUsage = new LlmUsage();
+            
             for (int step = 1; step <= maxSteps; step++)
             {
-                var stepResult = await ExecuteStepAsync(memory, step);
+                var (stepResult, usage) = await ExecuteStepAsync(memory, step);
                 result.Steps.Add($"Step {step}: {stepResult.Content}");
+                
+                // 累计使用情况统计
+                if (usage != null)
+                {
+                    totalUsage.PromptTokens += usage.PromptTokens;
+                    totalUsage.CompletionTokens += usage.CompletionTokens;
+                    totalUsage.TotalTokens += usage.TotalTokens;
+                }
                 
                 // 检查是否需要执行工具
                 if (stepResult.ToolCalls.Any())
@@ -108,6 +118,12 @@ public class AgentService
                 }
             }
             
+            // 设置总的使用情况统计
+            if (totalUsage.TotalTokens > 0)
+            {
+                result.Usage = totalUsage;
+            }
+            
             if (!result.IsCompleted)
             {
                 result.FinalResult = "Task execution reached maximum steps without completion";
@@ -126,18 +142,18 @@ public class AgentService
     /// </summary>
     /// <param name="memory">代理内存</param>
     /// <param name="stepNumber">步骤编号</param>
-    /// <returns>代理响应</returns>
-    private async Task<AgentResponse> ExecuteStepAsync(AgentMemory memory, int stepNumber)
+    /// <returns>代理响应和使用情况统计</returns>
+    private async Task<(AgentResponse response, LlmUsage? usage)> ExecuteStepAsync(AgentMemory memory, int stepNumber)
     {
         // 构建系统提示
         var systemPrompt = BuildSystemPrompt();
         memory.Messages.Insert(0, new AgentMessage { Role = "system", Content = systemPrompt });
         
-        // 模拟AI响应 - 在实际实现中，这里应该调用真实的LLM API
-        var response = await SimulateAIResponseAsync(memory, stepNumber);
+        // 调用真实的LLM API
+        var (response, usage) = await SimulateAIResponseAsync(memory, stepNumber);
         
         memory.AddMessage("assistant", response.Content);
-        return response;
+        return (response, usage);
     }
     
     /// <summary>
@@ -146,7 +162,7 @@ public class AgentService
     /// <param name="memory">代理内存</param>
     /// <param name="stepNumber">步骤编号</param>
     /// <returns>代理响应</returns>
-    private async Task<AgentResponse> SimulateAIResponseAsync(AgentMemory memory, int stepNumber)
+    private async Task<(AgentResponse response, LlmUsage? usage)> SimulateAIResponseAsync(AgentMemory memory, int stepNumber)
     {
         try
         {
@@ -183,26 +199,34 @@ public class AgentService
             if (response.IsSuccessStatusCode)
             {
                 var responseContent = await response.Content.ReadAsStringAsync();
-                var responseJson = JsonSerializer.Deserialize<JsonElement>(responseContent);
                 
-                if (responseJson.TryGetProperty("choices", out var choices) && choices.GetArrayLength() > 0)
+                // 使用新的DTO类解析响应
+                var llmResponse = JsonSerializer.Deserialize<LlmApiResponse>(responseContent, new JsonSerializerOptions
                 {
-                    var firstChoice = choices[0];
-                    if (firstChoice.TryGetProperty("message", out var message) &&
-                        message.TryGetProperty("content", out var messageContent))
+                    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+                    PropertyNameCaseInsensitive = true
+                });
+                
+                if (llmResponse?.Choices != null && llmResponse.Choices.Count > 0)
+                {
+                    var firstChoice = llmResponse.Choices[0];
+                    if (firstChoice.Message != null)
                     {
-                        var aiResponse = messageContent.GetString() ?? "";
+                        var aiResponse = firstChoice.Message.Content ?? "";
                         
                         // 检查是否包含工具调用（这里可以根据实际LLM的响应格式进行调整）
                         var toolCalls = ParseToolCalls(aiResponse);
                         
-                        return new AgentResponse
+                        var agentResponse = new AgentResponse
                         {
                             Content = aiResponse,
                             ToolCalls = toolCalls,
                             IsFinished = aiResponse.Contains("任务完成", StringComparison.OrdinalIgnoreCase) ||
-                                        aiResponse.Contains("task completed", StringComparison.OrdinalIgnoreCase)
+                                        aiResponse.Contains("task completed", StringComparison.OrdinalIgnoreCase) ||
+                                        firstChoice.FinishReason == "stop"
                         };
+                        
+                        return (agentResponse, llmResponse.Usage);
                     }
                 }
             }
@@ -215,19 +239,164 @@ public class AgentService
         catch (Exception ex)
         {
             // 如果API调用失败，返回错误信息
-            return new AgentResponse
+            var errorResponse = new AgentResponse
             {
                 Content = $"抱歉，AI服务暂时不可用: {ex.Message}",
                 IsFinished = false
             };
+            return (errorResponse, null);
         }
         
         // 默认响应
-        return new AgentResponse
+        var defaultResponse = new AgentResponse
         {
             Content = "抱歉，无法获取AI响应。",
             IsFinished = false
         };
+        return (defaultResponse, null);
+    }
+    
+    /// <summary>
+    /// 流式调用LLM API获取AI响应
+    /// </summary>
+    /// <param name="memory">代理内存</param>
+    /// <param name="onContentReceived">接收到内容时的回调</param>
+    /// <param name="cancellationToken">取消令牌</param>
+    /// <returns>最终的代理响应和使用情况统计</returns>
+    public async Task<(AgentResponse response, LlmUsage? usage)> StreamAIResponseAsync(AgentMemory memory, Func<string, Task> onContentReceived, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var appSettings = _configurationService.GetAppSettings();
+            var llmConfig = appSettings.LLMConfig;
+            
+            // 构建请求消息
+            var messages = memory.Messages.Select(m => new
+            {
+                role = m.Role,
+                content = m.Content
+            }).ToList();
+            
+            // 构建请求体（启用流式响应）
+            var requestBody = new
+            {
+                model = llmConfig.Model,
+                messages = messages,
+                max_tokens = llmConfig.MaxTokens,
+                temperature = llmConfig.Temperature,
+                stream = true
+            };
+            
+            var jsonContent = JsonSerializer.Serialize(requestBody);
+            var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+            
+            // 设置请求头
+            _httpClient.DefaultRequestHeaders.Clear();
+            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {llmConfig.ApiKey}");
+            
+            // 发送请求
+            var response = await _httpClient.PostAsync($"{llmConfig.BaseUrl.TrimEnd('/')}/chat/completions", content, cancellationToken);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var fullContent = new StringBuilder();
+                LlmUsage? usage = null;
+                bool isFinished = false;
+                
+                using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                using var reader = new StreamReader(stream);
+                
+                string? line;
+                while ((line = await reader.ReadLineAsync()) != null && !cancellationToken.IsCancellationRequested)
+                {
+                    if (string.IsNullOrWhiteSpace(line) || !line.StartsWith("data: "))
+                        continue;
+                        
+                    var data = line.Substring(6); // 移除 "data: " 前缀
+                    
+                    if (data == "[DONE]")
+                    {
+                        isFinished = true;
+                        break;
+                    }
+                    
+                    try
+                    {
+                        var streamResponse = JsonSerializer.Deserialize<LlmApiResponse>(data, new JsonSerializerOptions
+                        {
+                            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+                            PropertyNameCaseInsensitive = true
+                        });
+                        
+                        if (streamResponse?.Choices != null && streamResponse.Choices.Count > 0)
+                        {
+                            var choice = streamResponse.Choices[0];
+                            if (choice.Message?.Content != null)
+                            {
+                                var deltaContent = choice.Message.Content;
+                                fullContent.Append(deltaContent);
+                                
+                                // 实时回调新内容
+                                await onContentReceived(deltaContent);
+                            }
+                            
+                            // 检查是否完成
+                            if (choice.FinishReason == "stop")
+                            {
+                                isFinished = true;
+                            }
+                        }
+                        
+                        // 获取使用情况统计（通常在最后一个响应中）
+                        if (streamResponse.Usage != null)
+                        {
+                            usage = streamResponse.Usage;
+                        }
+                    }
+                    catch (JsonException)
+                    {
+                        // 忽略JSON解析错误，继续处理下一行
+                        continue;
+                    }
+                }
+                
+                var finalContent = fullContent.ToString();
+                var toolCalls = ParseToolCalls(finalContent);
+                
+                var agentResponse = new AgentResponse
+                {
+                    Content = finalContent,
+                    ToolCalls = toolCalls,
+                    IsFinished = isFinished || finalContent.Contains("任务完成", StringComparison.OrdinalIgnoreCase) ||
+                                finalContent.Contains("task completed", StringComparison.OrdinalIgnoreCase)
+                };
+                
+                return (agentResponse, usage);
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                throw new Exception($"LLM API调用失败: {response.StatusCode} - {errorContent}");
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            var cancelledResponse = new AgentResponse
+            {
+                Content = "请求已取消",
+                IsFinished = true
+            };
+            return (cancelledResponse, null);
+        }
+        catch (Exception ex)
+        {
+            var errorResponse = new AgentResponse
+            {
+                Content = $"抱歉，AI服务暂时不可用: {ex.Message}",
+                IsFinished = false
+            };
+            return (errorResponse, null);
+        }
     }
     
     /// <summary>

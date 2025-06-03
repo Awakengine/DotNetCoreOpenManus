@@ -97,6 +97,130 @@ window.initModernUI = () => {
     }
 };
 
+// 更新执行停靠区域位置
+window.updateExecutionDockPosition = (executionDockElement) => {
+    if (!executionDockElement) return;
+    
+    // 查找输入框区域
+    const inputArea = document.querySelector('.agent-input-area');
+    if (!inputArea) {
+        // 如果找不到输入框，使用默认位置
+        executionDockElement.style.bottom = '120px';
+        return;
+    }
+    
+    // 获取输入框的实际高度
+    const inputAreaHeight = inputArea.offsetHeight;
+    
+    // 设置执行组件的bottom位置，留出一些间距
+    const bottomOffset = inputAreaHeight + 10; // 10px间距
+    executionDockElement.style.bottom = bottomOffset + 'px';
+    
+    // 监听窗口大小变化和输入框高度变化
+    const resizeObserver = new ResizeObserver(() => {
+        const newInputAreaHeight = inputArea.offsetHeight;
+        const newBottomOffset = newInputAreaHeight + 10;
+        executionDockElement.style.bottom = newBottomOffset + 'px';
+    });
+    
+    // 开始观察输入框区域的大小变化
+    resizeObserver.observe(inputArea);
+    
+    // 将观察器存储到元素上，以便后续清理
+    executionDockElement._resizeObserver = resizeObserver;
+};
+
+// 清理执行停靠区域的观察器
+window.cleanupExecutionDockObserver = (executionDockElement) => {
+    if (executionDockElement && executionDockElement._resizeObserver) {
+        executionDockElement._resizeObserver.disconnect();
+        delete executionDockElement._resizeObserver;
+    }
+};
+
+// 执行状态持久化管理
+window.executionPersistence = {
+    // 保存执行状态到localStorage
+    saveExecutionState: (sessionId, executionResultJson) => {
+        try {
+            const key = `execution_state_${sessionId}`;
+            const data = {
+                executionResult: executionResultJson,
+                timestamp: Date.now()
+            };
+            localStorage.setItem(key, JSON.stringify(data));
+        } catch (error) {
+            console.warn('保存执行状态失败:', error);
+        }
+    },
+    
+    // 从localStorage加载执行状态
+    loadExecutionState: (sessionId) => {
+        try {
+            const key = `execution_state_${sessionId}`;
+            const data = localStorage.getItem(key);
+            if (data) {
+                const parsed = JSON.parse(data);
+                // 检查数据是否过期（24小时）
+                const maxAge = 24 * 60 * 60 * 1000; // 24小时
+                if (Date.now() - parsed.timestamp < maxAge) {
+                    return parsed.executionResult;
+                } else {
+                    // 清除过期数据
+                    localStorage.removeItem(key);
+                }
+            }
+        } catch (error) {
+            console.warn('加载执行状态失败:', error);
+        }
+        return null;
+    },
+    
+    // 清除执行状态
+    clearExecutionState: (sessionId) => {
+        try {
+            const key = `execution_state_${sessionId}`;
+            localStorage.removeItem(key);
+        } catch (error) {
+            console.warn('清除执行状态失败:', error);
+        }
+    },
+    
+    // 清除所有过期的执行状态
+    cleanupExpiredStates: () => {
+        try {
+            const maxAge = 24 * 60 * 60 * 1000; // 24小时
+            const keysToRemove = [];
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('execution_state_')) {
+                    const data = localStorage.getItem(key);
+                    if (data) {
+                        try {
+                            const parsed = JSON.parse(data);
+                            if (Date.now() - parsed.timestamp >= maxAge) {
+                                keysToRemove.push(key);
+                            }
+                        } catch (e) {
+                            keysToRemove.push(key);
+                        }
+                    }
+                }
+            }
+            
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+        } catch (error) {
+            console.warn('清理过期执行状态失败:', error);
+        }
+    }
+};
+
+// 页面加载时清理过期状态
+document.addEventListener('DOMContentLoaded', () => {
+    window.executionPersistence.cleanupExpiredStates();
+});
+
 // 平滑滚动到底部
 window.smoothScrollToBottom = (elementId) => {
     const element = document.getElementById(elementId);

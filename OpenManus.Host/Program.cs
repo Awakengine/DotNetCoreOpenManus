@@ -11,6 +11,7 @@ builder.Services.AddRazorComponents()
 // 注册自定义服务
 builder.Services.AddSingleton<FileManagementService>(); // 文件管理服务
 builder.Services.AddSingleton<ChatService>(); // 聊天服务
+builder.Services.AddSingleton<IChatHistoryService, ChatHistoryService>(); // 聊天历史服务
 builder.Services.AddSingleton<AgentService>(); // AI代理服务
 builder.Services.AddSingleton<IConfigurationService, ConfigurationService>(); // 配置服务
 // builder.Services.AddSingleton<SessionManagementService>(); // 会话管理服务（已注释）

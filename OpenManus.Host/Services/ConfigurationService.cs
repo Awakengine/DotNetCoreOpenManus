@@ -14,7 +14,7 @@ namespace OpenManus.Host.Services
         /// </summary>
         /// <returns>应用程序设置</returns>
         AppSettings GetAppSettings();
-        
+
         /// <summary>
         /// 保存应用程序设置
         /// </summary>
@@ -31,16 +31,19 @@ namespace OpenManus.Host.Services
         /// 配置对象
         /// </summary>
         private readonly IConfiguration _configuration;
-        
+
         /// <summary>
         /// Web主机环境
         /// </summary>
         private readonly IWebHostEnvironment _environment;
-        
+
         /// <summary>
         /// 当前设置缓存
         /// </summary>
         private AppSettings _currentSettings;
+
+        private static JsonSerializerOptions options = new JsonSerializerOptions { WriteIndented = true };
+
 
         /// <summary>
         /// 构造函数，初始化配置服务
@@ -70,20 +73,19 @@ namespace OpenManus.Host.Services
         public async Task SaveAppSettingsAsync(AppSettings settings)
         {
             _currentSettings = settings;
-            
+
             // 确定要更新的配置文件
             var fileName = _environment.IsDevelopment() ? "appsettings.Development.json" : "appsettings.json";
             var filePath = Path.Combine(_environment.ContentRootPath, fileName);
-            
+
             // 读取现有配置
             var json = await File.ReadAllTextAsync(filePath);
-            var config = JsonSerializer.Deserialize<Dictionary<string, object>>(json);
-            
+            var config = JsonSerializer.Deserialize<Dictionary<string, object>>(json) ?? new Dictionary<string, object>();
+
             // 更新AppSettings部分
             config["AppSettings"] = JsonSerializer.SerializeToElement(settings);
-            
+
             // 写回文件
-            var options = new JsonSerializerOptions { WriteIndented = true };
             var updatedJson = JsonSerializer.Serialize(config, options);
             await File.WriteAllTextAsync(filePath, updatedJson);
         }
