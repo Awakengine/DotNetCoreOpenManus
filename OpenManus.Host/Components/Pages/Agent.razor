@@ -10,7 +10,7 @@
 @rendermode InteractiveServer
 
 <PageTitle>OpenManus Agent</PageTitle>
-<div class="agent-content" style="display:flex;flex-direction:row;height:calc(100vh - 88px);position:relative;">
+<div class="agent-content" style="display:flex;flex-direction:column;height:calc(100vh - 88px);position:relative;">
 	<!-- 主内容区域 -->
 	<div class="main-chat-area" style="flex:1;display:flex;flex-direction:column;position:relative;transition:margin-right 0.3s ease;@(isFilePreviewModalVisible ? "margin-right:400px;" : "")">
 		<!-- 消息显示区域 -->
@@ -102,10 +102,10 @@
 							IsProcessing="@isProcessing"
 							IsFilePreviewVisible="@isFilePreviewModalVisible"
 							SelectedFiles="@selectedFiles"
-							OnExecuteTask="@(() => ExecuteTask())"
-							OnOpenFilePreview="@(() => OpenFilePreviewModal())"
-							OnFileSelected="@((e) => OnFileSelected(e))"
-							OnKeyPress="@(async (e) => await HandleKeyPress(e))" />
+							OnExecuteTask="@ExecuteTask"
+							OnOpenFilePreview="@OpenFilePreviewModal"
+							OnFileSelected="@OnFileSelected"
+							OnKeyPress="@HandleKeyPress" />
 		</div>
 	</div>
 
@@ -155,6 +155,43 @@
 		</div>
 	}
 </div>
+
+<style>
+	.chat-session-item {
+		position: relative;
+	}
+
+	.chat-session-item:hover {
+		background: #3a3a3a !important;
+		border-color: #555 !important;
+	}
+
+	.chat-session-item:hover .session-delete-btn {
+		opacity: 1 !important;
+	}
+
+	.chat-session-item.active:hover {
+		background: #3d6bb3 !important;
+		border-color: #5aa3f0 !important;
+	}
+
+	.session-delete-btn:hover {
+		background-color: #dc3545 !important;
+		color: white !important;
+	}
+
+	.chat-history-sidebar {
+		min-width: 300px;
+		max-width: 300px;
+	}
+
+	@@media (max-width: 768px) {
+		.chat-history-sidebar {
+			min-width: 250px;
+			max-width: 250px;
+		}
+	}
+</style>
 
 @code {
 	/// <summary>
@@ -212,10 +249,7 @@
 	/// </summary>
 	private FilePreviewInfo? currentPreviewFile;
 
-	/// <summary>
-	/// 对话会话列表
-	/// </summary>
-	private List<ChatSession> chatSessions = new();
+
 
 	/// <summary>
 	/// 文件预览信息类
@@ -238,31 +272,7 @@
 		public string Content { get; set; } = string.Empty;
 	}
 
-	/// <summary>
-	/// 聊天会话类
-	/// </summary>
-	public class ChatSession
-	{
-		/// <summary>
-		/// 会话ID
-		/// </summary>
-		public string Id { get; set; } = string.Empty;
 
-		/// <summary>
-		/// 会话标题
-		/// </summary>
-		public string Title { get; set; } = string.Empty;
-
-		/// <summary>
-		/// 最后活动时间
-		/// </summary>
-		public DateTime LastActivity { get; set; }
-
-		/// <summary>
-		/// 消息数量
-		/// </summary>
-		public int MessageCount { get; set; }
-	}
 
 	/// <summary>
 	/// 组件初始化时的异步方法
@@ -284,9 +294,6 @@
 
 		// 加载会话记忆
 		await LoadSessionMemoryAsync();
-
-		// 加载对话会话列表
-		await LoadChatSessionsAsync();
 	}
 
 	/// <summary>
@@ -537,37 +544,10 @@
 		await JSRuntime.InvokeVoidAsync("smoothScrollToBottom", "agent-messages");
 	}
 
-	/// <summary>
-	/// 加载聊天会话列表
-	/// </summary>
-	private async Task LoadChatSessionsAsync()
-	{
-		// 从聊天历史服务加载所有会话信息
-		var allSessions = await ChatHistoryService.GetAllSessionsAsync();
-		
-		chatSessions = allSessions.Select(kvp => new ChatSession
-		{
-			Id = kvp.Key,
-			Title = kvp.Value.Messages?.FirstOrDefault()?.Content?.Substring(0, Math.Min(20, kvp.Value.Messages.FirstOrDefault()?.Content?.Length ?? 0)) + "..." ?? "新对话",
-			LastActivity = kvp.Value.Messages?.LastOrDefault()?.Timestamp ?? DateTime.Now,
-			MessageCount = kvp.Value.Messages?.Count ?? 0
-		}).OrderByDescending(s => s.LastActivity).ToList();
-		
-		// 如果没有会话，创建一个默认会话
-		if (!chatSessions.Any())
-		{
-			chatSessions = new List<ChatSession>
-			{
-				new ChatSession
-				{
-					Id = currentSessionId,
-					Title = "新对话",
-					LastActivity = DateTime.Now,
-					MessageCount = 0
-				}
-			};
-		}
-	}
+
+
+
+
 
 	/// <summary>
 	/// 加载当前会话的记忆
@@ -610,48 +590,9 @@
 		}
 	}
 
-	/// <summary>
-	/// 开始新的聊天会话
-	/// </summary>
-	/// <returns>异步任务</returns>
-	private async Task StartNewChat()
-	{
-		var newSessionId = $"session-{DateTime.Now.Ticks}";
-		var newSession = new ChatSession
-			{
-				Id = newSessionId,
-				Title = "新对话",
-				LastActivity = DateTime.Now,
-				MessageCount = 0
-			};
 
-		chatSessions.Insert(0, newSession);
-		currentSessionId = newSessionId;
 
-		// 在聊天历史服务中创建新会话
-		await ChatHistoryService.GetSessionMemoryAsync(currentSessionId);
-		
-		// 清空当前会话
-		agentMemory = AgentService.GetSession(currentSessionId);
-		sessionMemories[currentSessionId] = agentMemory;
 
-		StateHasChanged();
-	}
-
-	/// <summary>
-	/// 切换到指定的会话
-	/// </summary>
-	/// <param name="sessionId">会话ID</param>
-	/// <returns>异步任务</returns>
-	private async Task SwitchToSession(string sessionId)
-	{
-		currentSessionId = sessionId;
-		
-		// 从聊天历史服务加载会话记忆
-		await LoadSessionMemoryAsync();
-
-		StateHasChanged();
-	}
 
 	/// <summary>
 	/// 显示文件预览

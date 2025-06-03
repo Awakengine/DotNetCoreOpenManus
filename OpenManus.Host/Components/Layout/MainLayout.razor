@@ -11,8 +11,7 @@
 @inherits LayoutComponentBase
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
-@* @inject SessionManagementService SessionService *@
-@inject ChatService ChatService
+@inject IChatHistoryService ChatHistoryService
 @inject IConfigurationService ConfigurationService
 @inject ILogger<MainLayout> Logger
 
@@ -26,19 +25,22 @@
 			</button>
 		</div>
 		<div class="chat-history-list">
-			@foreach (var session in chatSessions)
+			@if (chatSessions != null && chatSessions.Any())
 			{
-				<div class="chat-item @(session.Id == currentSessionId ? "active" : "")" @onclick="() => SwitchToSession(session.Id)">
-					<div class="chat-title">@session.Title</div>
-					<div class="chat-time">@session.LastActivity.ToString("MM/dd HH:mm")</div>
-					<div class="chat-actions">
-						<button class="btn-delete" title="删除对话" @onclick="() => DeleteSession(session.Id)" @onclick:stopPropagation="true">
-							<i class="fas fa-trash"></i>
-						</button>
+				@foreach (var session in chatSessions)
+				{
+					<div class="chat-item @(session.Id == currentSessionId ? "active" : "")" @onclick="() => SwitchToSession(session.Id)">
+						<div class="chat-title">@session.Title</div>
+						<div class="chat-time">@session.LastActivity.ToString("MM/dd HH:mm")</div>
+						<div class="chat-actions">
+							<button class="btn-delete" title="删除对话" @onclick="() => DeleteSession(session.Id)" @onclick:stopPropagation="true">
+								<i class="fas fa-trash"></i>
+							</button>
+						</div>
 					</div>
-				</div>
+				}
 			}
-			@if (!chatSessions.Any())
+			else
 			{
 				<div class="empty-history">
 					<i class="fas fa-comments text-muted"></i>
@@ -109,25 +111,65 @@
 
 	/// <summary>
 	/// 组件初始化时执行
-	/// 创建默认会话并初始化会话列表
+	/// 从ChatHistoryService加载会话列表
 	/// </summary>
 	protected override async Task OnInitializedAsync()
 	{
-		// 初始化默认会话
-		chatSessions = new List<ChatSessionInfo>
-		{
-			new ChatSessionInfo
-			{
-				Id = "default-session",
-				Title = "当前对话",
-				LastActivity = DateTime.Now,
-				MessageCount = 0,
-				CreatedAt = DateTime.Now
-			}
-		};
+		await LoadChatSessionsAsync();
 		StateHasChanged();
+	}
 
-		await Task.Delay(1);
+	/// <summary>
+	/// 加载聊天会话列表
+	/// </summary>
+	private async Task LoadChatSessionsAsync()
+	{
+		try
+		{
+			// 从聊天历史服务加载所有会话信息
+			var allSessions = await ChatHistoryService.GetAllSessionsAsync();
+			
+			chatSessions = allSessions.Select(kvp => new ChatSessionInfo
+			{
+				Id = kvp.Key,
+				Title = kvp.Value.Messages?.FirstOrDefault(m => m.Role == "user")?.Content?.Substring(0, Math.Min(30, kvp.Value.Messages.FirstOrDefault(m => m.Role == "user")?.Content?.Length ?? 0)) + "..." ?? "新对话",
+				LastActivity = kvp.Value.Messages?.LastOrDefault()?.Timestamp ?? DateTime.Now,
+				MessageCount = kvp.Value.Messages?.Count(m => m.Role != "system") ?? 0,
+				CreatedAt = kvp.Value.Messages?.FirstOrDefault()?.Timestamp ?? DateTime.Now
+			}).OrderByDescending(s => s.LastActivity).ToList();
+			
+			// 如果没有会话，创建一个默认会话
+			if (!chatSessions.Any())
+			{
+				chatSessions = new List<ChatSessionInfo>
+				{
+					new ChatSessionInfo
+					{
+						Id = currentSessionId,
+						Title = "新对话",
+						LastActivity = DateTime.Now,
+						MessageCount = 0,
+						CreatedAt = DateTime.Now
+					}
+				};
+			}
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, "加载会话列表失败");
+			// 创建默认会话作为后备
+			chatSessions = new List<ChatSessionInfo>
+			{
+				new ChatSessionInfo
+				{
+					Id = currentSessionId,
+					Title = "新对话",
+					LastActivity = DateTime.Now,
+					MessageCount = 0,
+					CreatedAt = DateTime.Now
+				}
+			};
+		}
 	}
 
 	/// <summary>
@@ -136,9 +178,6 @@
 	/// </summary>
 	private async Task CreateNewChat()
 	{
-		// 测试抛出异常，看看是否调用了函数。
-		// throw new NotImplementedException();
-
 		Console.WriteLine("=== CreateNewChat 方法被调用 ===");
 		Logger.LogInformation("=== CreateNewChat 方法被调用 ===");
 
@@ -147,23 +186,18 @@
 			Console.WriteLine("开始创建新对话");
 			Logger.LogInformation("开始创建新对话");
 
-			// 创建新会话
-			var newSession = new ChatSessionInfo
-				{
-					Id = Guid.NewGuid().ToString(),
-					Title = $"新对话 {chatSessions.Count + 1}",
-					LastActivity = DateTime.Now,
-					MessageCount = 0,
-					CreatedAt = DateTime.Now
-				};
-			System.Console.WriteLine($"创建新对话: 新对话 {chatSessions.Count + 1}");
-			chatSessions.Insert(0, newSession);
+			// 生成新的会话ID
+			var newSessionId = Guid.NewGuid().ToString();
+			currentSessionId = newSessionId;
 
-			// 清空当前对话
-			await ChatService.ClearMessagesAsync(newSession.Id);
+			// 在ChatHistoryService中初始化新会话
+			await ChatHistoryService.GetSessionMemoryAsync(newSessionId);
+
+			// 重新加载会话列表
+			await LoadChatSessionsAsync();
 
 			// 导航到新会话
-			Navigation.NavigateTo($"/agent/{newSession.Id}");
+			Navigation.NavigateTo($"/agent/{newSessionId}");
 			StateHasChanged();
 		}
 		catch (Exception ex)
@@ -202,6 +236,8 @@
 	{
 		try
 		{
+			if (sessionId == currentSessionId) return;
+			
 			currentSessionId = sessionId;
 			Navigation.NavigateTo($"/agent/{sessionId}");
 			StateHasChanged();
@@ -217,34 +253,29 @@
 	/// 如果删除的是当前会话，则自动切换到其他会话或创建新会话
 	/// </summary>
 	/// <param name="sessionId">要删除的会话ID</param>
-	private void DeleteSession(string sessionId)
+	private async Task DeleteSession(string sessionId)
 	{
 		try
 		{
-			// 从本地列表中删除会话
-			chatSessions = chatSessions.Where(s => s.Id != sessionId).ToList();
+			// 从ChatHistoryService删除会话
+			await ChatHistoryService.DeleteSessionAsync(sessionId);
 
-			// 如果删除的是当前会话，导航到默认会话或创建新会话
+			// 重新加载会话列表
+			await LoadChatSessionsAsync();
+
+			// 如果删除的是当前会话，导航到其他会话或创建新会话
 			if (currentSessionId == sessionId)
 			{
 				if (chatSessions.Any())
 				{
 					var firstSession = chatSessions.First();
+					currentSessionId = firstSession.Id;
 					Navigation.NavigateTo($"/agent/{firstSession.Id}");
 				}
 				else
 				{
 					// 创建新会话
-					var newSession = new ChatSessionInfo
-						{
-							Id = Guid.NewGuid().ToString(),
-							Title = $"新对话 {chatSessions.Count + 1}",
-							LastActivity = DateTime.Now,
-							MessageCount = 0,
-							CreatedAt = DateTime.Now
-						};
-					chatSessions.Insert(0, newSession);
-					Navigation.NavigateTo($"/agent/{newSession.Id}");
+					await CreateNewChat();
 				}
 			}
 
