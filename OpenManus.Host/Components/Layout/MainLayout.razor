@@ -14,6 +14,7 @@
 @inject IChatHistoryService ChatHistoryService
 @inject IConfigurationService ConfigurationService
 @inject ILogger<MainLayout> Logger
+@implements IDisposable
 
 <div class="layout-container">
 	<!-- 左侧对话历史列表 -->
@@ -115,6 +116,12 @@
 	/// </summary>
 	protected override async Task OnInitializedAsync()
 	{
+		// 监听URL变化
+		Navigation.LocationChanged += OnLocationChanged;
+		
+		// 从URL获取当前会话ID
+		UpdateCurrentSessionIdFromUrl();
+		
 		await LoadChatSessionsAsync();
 		StateHasChanged();
 	}
@@ -355,6 +362,74 @@
 		// 可以在这里重新加载配置或更新UI
 		StateHasChanged();
 		await Task.Delay(1);
+	}
 
+	/// <summary>
+	/// URL变化时的处理方法
+	/// 更新当前会话ID并刷新UI
+	/// </summary>
+	/// <param name="sender">事件发送者</param>
+	/// <param name="e">位置变化事件参数</param>
+	private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+	{
+		try
+		{
+			var previousSessionId = currentSessionId;
+			UpdateCurrentSessionIdFromUrl();
+			
+			// 如果会话ID发生变化，重新加载会话列表
+			if (currentSessionId != previousSessionId)
+			{
+				await InvokeAsync(async () =>
+				{
+					await LoadChatSessionsAsync();
+					StateHasChanged();
+				});
+			}
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, "处理URL变化时发生错误");
+		}
+	}
+
+	/// <summary>
+	/// 从当前URL更新会话ID
+	/// 解析URL路径获取会话ID参数
+	/// </summary>
+	private void UpdateCurrentSessionIdFromUrl()
+	{
+		try
+		{
+			var uri = new Uri(Navigation.Uri);
+			var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+			
+			// 检查URL格式是否为 /agent/{sessionId}
+			if (segments.Length >= 2 && segments[0].Equals("agent", StringComparison.OrdinalIgnoreCase))
+			{
+				currentSessionId = segments[1];
+				Logger.LogInformation($"从URL更新会话ID: {currentSessionId}");
+			}
+			else if (segments.Length >= 1 && segments[0].Equals("agent", StringComparison.OrdinalIgnoreCase))
+			{
+				// 如果只有/agent路径，使用默认会话ID
+				currentSessionId = "default-session";
+				Logger.LogInformation("使用默认会话ID: default-session");
+			}
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, "从URL更新会话ID时发生错误");
+			currentSessionId = "default-session";
+		}
+	}
+
+	/// <summary>
+	/// 释放资源
+	/// 取消URL变化事件监听
+	/// </summary>
+	public void Dispose()
+	{
+		Navigation.LocationChanged -= OnLocationChanged;
 	}
 }

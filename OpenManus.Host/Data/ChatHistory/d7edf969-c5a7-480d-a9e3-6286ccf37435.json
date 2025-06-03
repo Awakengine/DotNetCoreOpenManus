@@ -1,0 +1,36 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "中国生肖",
+      "timestamp": "2025-06-03T10:24:21.6359923Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "role": "user",
+      "content": "中国生肖",
+      "timestamp": "2025-06-03T10:24:21.6361206Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "timestamp": "2025-06-03T10:24:21.7429496Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "timestamp": "2025-06-03T10:25:21.1950747Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    }
+  ]
+}
