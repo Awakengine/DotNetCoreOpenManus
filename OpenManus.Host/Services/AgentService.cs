@@ -31,14 +31,21 @@ public class AgentService
     private readonly FileManagementService _fileService;
     
     /// <summary>
+    /// 配置服务
+    /// </summary>
+    private readonly IConfigurationService _configurationService;
+    
+    /// <summary>
     /// 构造函数，初始化代理服务
     /// </summary>
     /// <param name="httpClient">HTTP客户端</param>
     /// <param name="fileService">文件管理服务</param>
-    public AgentService(HttpClient httpClient, FileManagementService fileService)
+    /// <param name="configurationService">配置服务</param>
+    public AgentService(HttpClient httpClient, FileManagementService fileService, IConfigurationService configurationService)
     {
         _httpClient = httpClient;
         _fileService = fileService;
+        _configurationService = configurationService;
         InitializeTools();
     }
     
@@ -60,7 +67,7 @@ public class AgentService
     /// <param name="userMessage">用户消息</param>
     /// <param name="maxSteps">最大执行步数</param>
     /// <returns>代理执行结果</returns>
-    public async Task<AgentExecutionResult> ExecuteTaskAsync(string sessionId, string userMessage, int maxSteps = 1000)
+    public async Task<AgentExecutionResult> ExecuteTaskAsync(string sessionId, string userMessage, int maxSteps = 2)
     {
         var memory = GetOrCreateSession(sessionId);
         memory.AddMessage("user", userMessage);
@@ -134,93 +141,92 @@ public class AgentService
     }
     
     /// <summary>
-    /// 模拟AI响应（在实际实现中应该调用真实的LLM API）
+    /// 调用真实的LLM API获取AI响应
     /// </summary>
     /// <param name="memory">代理内存</param>
     /// <param name="stepNumber">步骤编号</param>
     /// <returns>代理响应</returns>
     private async Task<AgentResponse> SimulateAIResponseAsync(AgentMemory memory, int stepNumber)
     {
-        await Task.CompletedTask; // 避免async警告
-        
-        // 获取最后的用户消息
-        var lastUserMessage = memory.Messages.LastOrDefault(m => m.Role == "user")?.Content ?? "";
-        
-        // 简单的响应逻辑 - 在实际实现中应该调用真实的LLM
-        if (lastUserMessage.Contains("file", StringComparison.OrdinalIgnoreCase) || 
-            lastUserMessage.Contains("read", StringComparison.OrdinalIgnoreCase))
+        try
         {
-            return new AgentResponse
+            var appSettings = _configurationService.GetAppSettings();
+            var llmConfig = appSettings.LLMConfig;
+            
+            // 构建请求消息
+            var messages = memory.Messages.Select(m => new
             {
-                Content = "I'll help you with file operations.",
-                ToolCalls = new List<ToolCall>
-                {
-                    new ToolCall
-                    {
-                        Name = "file_operation",
-                        Arguments = new Dictionary<string, object>
-                        {
-                            ["operation"] = "list",
-                            ["directory"] = ""
-                        }
-                    }
-                }
+                role = m.Role,
+                content = m.Content
+            }).ToList();
+            
+            // 构建请求体
+            var requestBody = new
+            {
+                model = llmConfig.Model,
+                messages = messages,
+                max_tokens = llmConfig.MaxTokens,
+                temperature = llmConfig.Temperature,
+                stream = false
             };
-        }
-        
-        if (lastUserMessage.Contains("python", StringComparison.OrdinalIgnoreCase) || 
-            lastUserMessage.Contains("code", StringComparison.OrdinalIgnoreCase))
-        {
-            return new AgentResponse
+            
+            var jsonContent = JsonSerializer.Serialize(requestBody);
+            var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+            
+            // 设置请求头
+            _httpClient.DefaultRequestHeaders.Clear();
+            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {llmConfig.ApiKey}");
+            
+            // 发送请求
+            var response = await _httpClient.PostAsync($"{llmConfig.BaseUrl.TrimEnd('/')}/chat/completions", content);
+            
+            if (response.IsSuccessStatusCode)
             {
-                Content = "I'll execute some Python code for you.",
-                ToolCalls = new List<ToolCall>
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var responseJson = JsonSerializer.Deserialize<JsonElement>(responseContent);
+                
+                if (responseJson.TryGetProperty("choices", out var choices) && choices.GetArrayLength() > 0)
                 {
-                    new ToolCall
+                    var firstChoice = choices[0];
+                    if (firstChoice.TryGetProperty("message", out var message) &&
+                        message.TryGetProperty("content", out var messageContent))
                     {
-                        Name = "python_execute",
-                        Arguments = new Dictionary<string, object>
+                        var aiResponse = messageContent.GetString() ?? "";
+                        
+                        // 检查是否包含工具调用（这里可以根据实际LLM的响应格式进行调整）
+                        var toolCalls = ParseToolCalls(aiResponse);
+                        
+                        return new AgentResponse
                         {
-                            ["code"] = "print('Hello from Python!')\nprint('Current time:', __import__('datetime').datetime.now())"
-                        }
+                            Content = aiResponse,
+                            ToolCalls = toolCalls,
+                            IsFinished = aiResponse.Contains("任务完成", StringComparison.OrdinalIgnoreCase) ||
+                                        aiResponse.Contains("task completed", StringComparison.OrdinalIgnoreCase)
+                        };
                     }
                 }
-            };
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                throw new Exception($"LLM API调用失败: {response.StatusCode} - {errorContent}");
+            }
         }
-        
-        if (lastUserMessage.Contains("search", StringComparison.OrdinalIgnoreCase))
+        catch (Exception ex)
         {
+            // 如果API调用失败，返回错误信息
             return new AgentResponse
             {
-                Content = "I'll search for information.",
-                ToolCalls = new List<ToolCall>
-                {
-                    new ToolCall
-                    {
-                        Name = "search",
-                        Arguments = new Dictionary<string, object>
-                        {
-                            ["query"] = ExtractSearchQuery(lastUserMessage),
-                            ["max_results"] = 3
-                        }
-                    }
-                }
+                Content = $"抱歉，AI服务暂时不可用: {ex.Message}",
+                IsFinished = false
             };
         }
         
         // 默认响应
-        if (stepNumber >= 3)
-        {
-            return new AgentResponse
-            {
-                Content = $"I've completed the analysis of your request: '{lastUserMessage}'. The task has been processed successfully.",
-                IsFinished = true
-            };
-        }
-        
         return new AgentResponse
         {
-            Content = $"I understand your request: '{lastUserMessage}'. Let me process this step by step."
+            Content = "抱歉，无法获取AI响应。",
+            IsFinished = false
         };
     }
     
@@ -241,6 +247,62 @@ public class AgentService
         }
         
         return message;
+    }
+    
+    /// <summary>
+    /// 解析AI响应中的工具调用
+    /// </summary>
+    /// <param name="aiResponse">AI响应内容</param>
+    /// <returns>工具调用列表</returns>
+    private List<ToolCall> ParseToolCalls(string aiResponse)
+    {
+        var toolCalls = new List<ToolCall>();
+        
+        // 这里可以根据实际LLM的响应格式来解析工具调用
+        // 目前使用简单的关键词匹配逻辑
+        
+        if (aiResponse.Contains("文件", StringComparison.OrdinalIgnoreCase) || 
+            aiResponse.Contains("file", StringComparison.OrdinalIgnoreCase))
+        {
+            toolCalls.Add(new ToolCall
+            {
+                Name = "file_operation",
+                Arguments = new Dictionary<string, object>
+                {
+                    ["operation"] = "list",
+                    ["directory"] = ""
+                }
+            });
+        }
+        
+        if (aiResponse.Contains("python", StringComparison.OrdinalIgnoreCase) || 
+            aiResponse.Contains("代码", StringComparison.OrdinalIgnoreCase))
+        {
+            toolCalls.Add(new ToolCall
+            {
+                Name = "python_execute",
+                Arguments = new Dictionary<string, object>
+                {
+                    ["code"] = "print('Hello from Python!')"
+                }
+            });
+        }
+        
+        if (aiResponse.Contains("搜索", StringComparison.OrdinalIgnoreCase) || 
+            aiResponse.Contains("search", StringComparison.OrdinalIgnoreCase))
+        {
+            toolCalls.Add(new ToolCall
+            {
+                Name = "search",
+                Arguments = new Dictionary<string, object>
+                {
+                    ["query"] = "搜索查询",
+                    ["max_results"] = 3
+                }
+            });
+        }
+        
+        return toolCalls;
     }
     
     /// <summary>
@@ -294,16 +356,16 @@ public class AgentService
         
         return $@"You are Manus, a versatile AI assistant that can help with various tasks.
 
-Available tools:
-{string.Join("\n", toolDescriptions)}
+                Available tools:
+                {string.Join("\n", toolDescriptions)}
 
-You should:
-1. Analyze the user's request carefully
-2. Use appropriate tools to accomplish the task
-3. Provide clear and helpful responses
-4. Break down complex tasks into manageable steps
+                You should:
+                1. Analyze the user's request carefully
+                2. Use appropriate tools to accomplish the task
+                3. Provide clear and helpful responses
+                4. Break down complex tasks into manageable steps
 
-When you need to use a tool, clearly indicate which tool you're using and why.";
+                When you need to use a tool, clearly indicate which tool you're using and why.";
     }
     
     /// <summary>

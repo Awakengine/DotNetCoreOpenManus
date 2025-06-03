@@ -19,8 +19,8 @@
     </div>
 
     <textarea class="form-control" placeholder="输入您的消息...（Shift+Enter 换行）" 
-        @bind="CurrentMessage" @bind:event="oninput"
-        @onkeydown="@(e => HandleKeyPress(e))" disabled="@IsProcessing" rows="1" @ref="textareaRef"></textarea>
+        @bind-value="CurrentMessage" @bind-value:event="oninput" @bind-value:after="OnCurrentMessageChanged"
+        @onkeydown="@(e => HandleKeyPress(e))" disabled="@IsProcessing" rows="6" @ref="textareaRef"></textarea>
     <div class="input-group align-items-end">
         <label class="btn btn-outline-secondary mb-0 me-2">
             <i class="fas fa-paperclip"></i>
@@ -108,6 +108,15 @@
     private InputFile? fileInputRef;
 
     /// <summary>
+    /// 处理当前消息变化后的回调
+    /// </summary>
+    /// <returns>异步任务</returns>
+    private async Task OnCurrentMessageChanged()
+    {
+        await CurrentMessageChanged.InvokeAsync(CurrentMessage);
+    }
+
+    /// <summary>
     /// 处理键盘按键事件
     /// </summary>
     /// <param name="e">键盘事件参数</param>
@@ -126,9 +135,9 @@
         }
 
         // 调用父组件的按键处理
-        if (OnKeyPress.HasDelegate)
-        {
-            await OnKeyPress.InvokeAsync(e);
-        }
+        // if (OnKeyPress.HasDelegate)
+        // {
+        //     await OnKeyPress.InvokeAsync(e);
+        // }
     }
 }

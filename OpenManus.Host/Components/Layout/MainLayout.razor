@@ -17,313 +17,313 @@
 @inject ILogger<MainLayout> Logger
 
 <div class="layout-container">
-    <!-- 左侧对话历史列表 -->
-    <div class="chat-history-panel">
-        <div class="panel-header">
-            <h5 class="panel-title">对话历史</h5>
-            <button class="btn-new-chat" title="新建对话" @onclick="CreateNewChat">
-                <i class="fas fa-plus"></i>
-            </button>
-        </div>
-        <div class="chat-history-list">
-            @foreach (var session in chatSessions)
-            {
-                <div class="chat-item @(session.Id == currentSessionId ? "active" : "")" @onclick="() => SwitchToSession(session.Id)">
-                    <div class="chat-title">@session.Title</div>
-                    <div class="chat-time">@session.LastActivity.ToString("MM/dd HH:mm")</div>
-                    <div class="chat-actions">
-                        <button class="btn-delete" title="删除对话" @onclick="() => DeleteSession(session.Id)" @onclick:stopPropagation="true">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            }
-            @if (!chatSessions.Any())
-            {
-                <div class="empty-history">
-                    <i class="fas fa-comments text-muted"></i>
-                    <p class="text-muted">暂无对话历史</p>
-                </div>
-            }
-        </div>
-        
-        <!-- 底部用户信息和设置区域 -->
-        <div class="chat-history-footer">
-            <div class="user-info">
-                <div class="user-avatar">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div class="user-details">
-                    <div class="user-name">用户</div>
-                    <div class="user-status">在线</div>
-                </div>
-            </div>
-            <div class="footer-actions">
-                <button class="btn-settings" title="设置" @onclick="OpenSettings">
-                    <i class="fas fa-cog"></i>
-                </button>
-                <button class="btn-help" title="帮助" @onclick="OpenHelp">
-                    <i class="fas fa-question-circle"></i>
-                </button>
-            </div>
-        </div>
-    </div>
+	<!-- 左侧对话历史列表 -->
+	<div class="chat-history-panel">
+		<div class="panel-header">
+			<h5 class="panel-title">对话历史</h5>
+			<button class="btn-new-chat" title="新建对话" @onclick="CreateNewChat">
+				<i class="fas fa-plus"></i>
+			</button>
+		</div>
+		<div class="chat-history-list">
+			@foreach (var session in chatSessions)
+			{
+				<div class="chat-item @(session.Id == currentSessionId ? "active" : "")" @onclick="() => SwitchToSession(session.Id)">
+					<div class="chat-title">@session.Title</div>
+					<div class="chat-time">@session.LastActivity.ToString("MM/dd HH:mm")</div>
+					<div class="chat-actions">
+						<button class="btn-delete" title="删除对话" @onclick="() => DeleteSession(session.Id)" @onclick:stopPropagation="true">
+							<i class="fas fa-trash"></i>
+						</button>
+					</div>
+				</div>
+			}
+			@if (!chatSessions.Any())
+			{
+				<div class="empty-history">
+					<i class="fas fa-comments text-muted"></i>
+					<p class="text-muted">暂无对话历史</p>
+				</div>
+			}
+		</div>
 
-    <!-- 右侧内容区域 -->
-    <div class="chat-content-panel">
-        <div class="panel-header">
-            <h5 class="panel-title">@GetCurrentSessionTitle()</h5>
-            <div class="chat-controls">
-                <button class="btn-clear" title="清空对话" @onclick="ClearCurrentSession">
-                    <i class="fas fa-trash"></i>
-                </button>
-                <button class="btn-settings" title="设置" @onclick="OpenSettings">
-                    <i class="fas fa-cog"></i>
-                </button>
-            </div>
-        </div>
-        <main class="main-content">
-            @Body
-        </main>
-    </div>
+		<!-- 底部用户信息和设置区域 -->
+		<div class="chat-history-footer">
+			<div class="user-info">
+				<div class="user-avatar">
+					<i class="fas fa-user"></i>
+				</div>
+				<div class="user-details">
+					<div class="user-name">用户</div>
+					<div class="user-status">在线</div>
+				</div>
+			</div>
+			<div class="footer-actions">
+				<button class="btn-settings" title="设置" @onclick="OpenSettings">
+					<i class="fas fa-cog"></i>
+				</button>
+				<button class="btn-help" title="帮助" @onclick="OpenHelp">
+					<i class="fas fa-question-circle"></i>
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- 右侧内容区域 -->
+	<div class="chat-content-panel">
+		<div class="panel-header">
+			<h5 class="panel-title">@GetCurrentSessionTitle()</h5>
+			<div class="chat-controls">
+				<button class="btn-clear" title="清空对话" @onclick="ClearCurrentSession">
+					<i class="fas fa-trash"></i>
+				</button>
+				<button class="btn-settings" title="设置" @onclick="OpenSettings">
+					<i class="fas fa-cog"></i>
+				</button>
+			</div>
+		</div>
+		<main class="main-content">
+			@Body
+		</main>
+	</div>
 </div>
 
 <!-- 设置弹框 -->
 <SettingsModal IsVisible="@isSettingsVisible" IsVisibleChanged="@OnSettingsVisibilityChanged" OnSettingsSaved="@OnSettingsSaved" />
 
 @code {
-    /// <summary>
-    /// 聊天会话列表
-    /// </summary>
-    private List<ChatSessionInfo> chatSessions = new();
-    
-    /// <summary>
-    /// 当前会话ID
-    /// </summary>
-    private string currentSessionId = "default-session";
-    
-    /// <summary>
-    /// 设置模态框是否可见
-    /// </summary>
-    private bool isSettingsVisible = false;
-    
-    /// <summary>
-    /// 组件初始化时执行
-    /// 创建默认会话并初始化会话列表
-    /// </summary>
-    protected override async Task OnInitializedAsync()
-    {
-        // 初始化默认会话
-        chatSessions = new List<ChatSessionInfo>
-        {
-            new ChatSessionInfo
-            {
-                Id = "default-session",
-                Title = "当前对话",
-                LastActivity = DateTime.Now,
-                MessageCount = 0,
-                CreatedAt = DateTime.Now
-            }
-        };
-        StateHasChanged();
-        
-        await Task.Delay(1);
-    }
-    
-    /// <summary>
-    /// 创建新的聊天会话
-    /// 生成新的会话ID，清空消息历史，并导航到新会话
-    /// </summary>
-    private async Task CreateNewChat()
-    {
-        // 测试抛出异常，看看是否调用了函数。
-        // throw new NotImplementedException();
-        
-        Console.WriteLine("=== CreateNewChat 方法被调用 ===");
-        Logger.LogInformation("=== CreateNewChat 方法被调用 ===");
+	/// <summary>
+	/// 聊天会话列表
+	/// </summary>
+	private List<ChatSessionInfo> chatSessions = new();
 
-        try
-        {
-            Console.WriteLine("开始创建新对话");
-            Logger.LogInformation("开始创建新对话");
+	/// <summary>
+	/// 当前会话ID
+	/// </summary>
+	private string currentSessionId = "default-session";
 
-            // 创建新会话
-            var newSession = new ChatSessionInfo
-            {
-                Id = Guid.NewGuid().ToString(),
-                Title = $"新对话 {chatSessions.Count + 1}",
-                LastActivity = DateTime.Now,
-                MessageCount = 0,
-                CreatedAt = DateTime.Now
-            };
-            System.Console.WriteLine($"创建新对话: 新对话 {chatSessions.Count + 1}");
-            chatSessions.Insert(0, newSession);
-            
-            // 清空当前对话
-            await ChatService.ClearMessagesAsync(newSession.Id);
-            
-            // 导航到新会话
-            Navigation.NavigateTo($"/agent/{newSession.Id}");
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "创建新对话失败");
-        }
-    }
-    
-    /// <summary>
-    /// 保存当前会话的消息
-    /// 更新会话元数据，消息通过ChatService自动保存
-    /// </summary>
-    private void SaveCurrentSessionMessages()
-    {
-        try
-        {
-            // 这里可以添加保存当前会话消息的逻辑
-            // 由于消息已经通过ChatService自动保存，这里主要是更新会话元数据
-            if (!string.IsNullOrEmpty(currentSessionId))
-            {
-                // 临时移除会话更新逻辑
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "保存当前会话失败");
-        }
-    }
-    
-    /// <summary>
-    /// 切换到指定的会话
-    /// 更新当前会话ID并导航到对应页面
-    /// </summary>
-    /// <param name="sessionId">要切换到的会话ID</param>
-    private void SwitchToSession(string sessionId)
-    {
-        try
-        {
-            currentSessionId = sessionId;
-            Navigation.NavigateTo($"/agent/{sessionId}");
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "切换会话失败");
-        }
-    }
+	/// <summary>
+	/// 设置模态框是否可见
+	/// </summary>
+	private bool isSettingsVisible = false;
 
-    /// <summary>
-    /// 删除指定的会话
-    /// 如果删除的是当前会话，则自动切换到其他会话或创建新会话
-    /// </summary>
-    /// <param name="sessionId">要删除的会话ID</param>
-    private void DeleteSession(string sessionId)
-    {
-        try
-        {
-            // 从本地列表中删除会话
-            chatSessions = chatSessions.Where(s => s.Id != sessionId).ToList();
-            
-            // 如果删除的是当前会话，导航到默认会话或创建新会话
-            if (currentSessionId == sessionId)
-            {
-                if (chatSessions.Any())
-                {
-                    var firstSession = chatSessions.First();
-                    Navigation.NavigateTo($"/agent/{firstSession.Id}");
-                }
-                else
-                {
-                    // 创建新会话
-                    var newSession = new ChatSessionInfo
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        Title = $"新对话 {chatSessions.Count + 1}",
-                        LastActivity = DateTime.Now,
-                        MessageCount = 0,
-                        CreatedAt = DateTime.Now
-                    };
-                    chatSessions.Insert(0, newSession);
-                    Navigation.NavigateTo($"/agent/{newSession.Id}");
-                }
-            }
-            
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "删除会话失败");
-        }
-    }
-    
-    /// <summary>
-    /// 获取当前会话的标题
-    /// 如果找不到会话则返回默认标题
-    /// </summary>
-    /// <returns>会话标题</returns>
-    private string GetCurrentSessionTitle()
-    {
-        var session = chatSessions.FirstOrDefault(s => s.Id == currentSessionId);
-        return session?.Title ?? "AI 助手";
-    }
-    
-    /// <summary>
-    /// 清空当前会话的内容
-    /// 调用AgentService清空会话消息
-    /// </summary>
-    private void ClearCurrentSession()
-    {
-        // 这里可以添加清空当前会话的逻辑
-        // 例如调用AgentService清空会话
-        StateHasChanged();
-    }
-    
-    /// <summary>
-    /// 打开设置模态框
-    /// 设置可见性状态并刷新UI
-    /// </summary>
-    private void OpenSettings()
-    {
-        Console.WriteLine($"OpenSettings called, current isSettingsVisible: {isSettingsVisible}");
-        isSettingsVisible = true;
-        Console.WriteLine($"OpenSettings after setting, isSettingsVisible: {isSettingsVisible}");
-        StateHasChanged();
-        Console.WriteLine("StateHasChanged called");
-    }
-    
-    /// <summary>
-    /// 打开帮助页面或帮助模态框
-    /// 提供用户使用指导
-    /// </summary>
-    private void OpenHelp()
-    {
-        // 这里可以添加打开帮助页面的逻辑
-        // 例如导航到帮助页面或显示帮助模态框
-        Console.WriteLine("打开帮助");
-    }
-    
-    /// <summary>
-    /// 设置模态框可见性变化时的回调
-    /// 更新本地状态并刷新UI
-    /// </summary>
-    /// <param name="isVisible">模态框是否可见</param>
-    private async Task OnSettingsVisibilityChanged(bool isVisible)
-    {
-        isSettingsVisible = isVisible;
-        StateHasChanged();
-            await Task.Delay(1);
-    }
-    
-    /// <summary>
-    /// 设置保存后的处理逻辑
-    /// 重新加载配置或更新UI
-    /// </summary>
-    private async Task OnSettingsSaved()
-    {
-        // 设置保存后的处理逻辑
-        // 可以在这里重新加载配置或更新UI
-        StateHasChanged();
-        await Task.Delay(1);
+	/// <summary>
+	/// 组件初始化时执行
+	/// 创建默认会话并初始化会话列表
+	/// </summary>
+	protected override async Task OnInitializedAsync()
+	{
+		// 初始化默认会话
+		chatSessions = new List<ChatSessionInfo>
+		{
+			new ChatSessionInfo
+			{
+				Id = "default-session",
+				Title = "当前对话",
+				LastActivity = DateTime.Now,
+				MessageCount = 0,
+				CreatedAt = DateTime.Now
+			}
+		};
+		StateHasChanged();
 
-    }
+		await Task.Delay(1);
+	}
+
+	/// <summary>
+	/// 创建新的聊天会话
+	/// 生成新的会话ID，清空消息历史，并导航到新会话
+	/// </summary>
+	private async Task CreateNewChat()
+	{
+		// 测试抛出异常，看看是否调用了函数。
+		// throw new NotImplementedException();
+
+		Console.WriteLine("=== CreateNewChat 方法被调用 ===");
+		Logger.LogInformation("=== CreateNewChat 方法被调用 ===");
+
+		try
+		{
+			Console.WriteLine("开始创建新对话");
+			Logger.LogInformation("开始创建新对话");
+
+			// 创建新会话
+			var newSession = new ChatSessionInfo
+				{
+					Id = Guid.NewGuid().ToString(),
+					Title = $"新对话 {chatSessions.Count + 1}",
+					LastActivity = DateTime.Now,
+					MessageCount = 0,
+					CreatedAt = DateTime.Now
+				};
+			System.Console.WriteLine($"创建新对话: 新对话 {chatSessions.Count + 1}");
+			chatSessions.Insert(0, newSession);
+
+			// 清空当前对话
+			await ChatService.ClearMessagesAsync(newSession.Id);
+
+			// 导航到新会话
+			Navigation.NavigateTo($"/agent/{newSession.Id}");
+			StateHasChanged();
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, "创建新对话失败");
+		}
+	}
+
+	/// <summary>
+	/// 保存当前会话的消息
+	/// 更新会话元数据，消息通过ChatService自动保存
+	/// </summary>
+	private void SaveCurrentSessionMessages()
+	{
+		try
+		{
+			// 这里可以添加保存当前会话消息的逻辑
+			// 由于消息已经通过ChatService自动保存，这里主要是更新会话元数据
+			if (!string.IsNullOrEmpty(currentSessionId))
+			{
+				// 临时移除会话更新逻辑
+			}
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, "保存当前会话失败");
+		}
+	}
+
+	/// <summary>
+	/// 切换到指定的会话
+	/// 更新当前会话ID并导航到对应页面
+	/// </summary>
+	/// <param name="sessionId">要切换到的会话ID</param>
+	private void SwitchToSession(string sessionId)
+	{
+		try
+		{
+			currentSessionId = sessionId;
+			Navigation.NavigateTo($"/agent/{sessionId}");
+			StateHasChanged();
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, "切换会话失败");
+		}
+	}
+
+	/// <summary>
+	/// 删除指定的会话
+	/// 如果删除的是当前会话，则自动切换到其他会话或创建新会话
+	/// </summary>
+	/// <param name="sessionId">要删除的会话ID</param>
+	private void DeleteSession(string sessionId)
+	{
+		try
+		{
+			// 从本地列表中删除会话
+			chatSessions = chatSessions.Where(s => s.Id != sessionId).ToList();
+
+			// 如果删除的是当前会话，导航到默认会话或创建新会话
+			if (currentSessionId == sessionId)
+			{
+				if (chatSessions.Any())
+				{
+					var firstSession = chatSessions.First();
+					Navigation.NavigateTo($"/agent/{firstSession.Id}");
+				}
+				else
+				{
+					// 创建新会话
+					var newSession = new ChatSessionInfo
+						{
+							Id = Guid.NewGuid().ToString(),
+							Title = $"新对话 {chatSessions.Count + 1}",
+							LastActivity = DateTime.Now,
+							MessageCount = 0,
+							CreatedAt = DateTime.Now
+						};
+					chatSessions.Insert(0, newSession);
+					Navigation.NavigateTo($"/agent/{newSession.Id}");
+				}
+			}
+
+			StateHasChanged();
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, "删除会话失败");
+		}
+	}
+
+	/// <summary>
+	/// 获取当前会话的标题
+	/// 如果找不到会话则返回默认标题
+	/// </summary>
+	/// <returns>会话标题</returns>
+	private string GetCurrentSessionTitle()
+	{
+		var session = chatSessions.FirstOrDefault(s => s.Id == currentSessionId);
+		return session?.Title ?? "AI 助手";
+	}
+
+	/// <summary>
+	/// 清空当前会话的内容
+	/// 调用AgentService清空会话消息
+	/// </summary>
+	private void ClearCurrentSession()
+	{
+		// 这里可以添加清空当前会话的逻辑
+		// 例如调用AgentService清空会话
+		StateHasChanged();
+	}
+
+	/// <summary>
+	/// 打开设置模态框
+	/// 设置可见性状态并刷新UI
+	/// </summary>
+	private void OpenSettings()
+	{
+		Console.WriteLine($"OpenSettings called, current isSettingsVisible: {isSettingsVisible}");
+		isSettingsVisible = true;
+		Console.WriteLine($"OpenSettings after setting, isSettingsVisible: {isSettingsVisible}");
+		StateHasChanged();
+		Console.WriteLine("StateHasChanged called");
+	}
+
+	/// <summary>
+	/// 打开帮助页面或帮助模态框
+	/// 提供用户使用指导
+	/// </summary>
+	private void OpenHelp()
+	{
+		// 这里可以添加打开帮助页面的逻辑
+		// 例如导航到帮助页面或显示帮助模态框
+		Console.WriteLine("打开帮助");
+	}
+
+	/// <summary>
+	/// 设置模态框可见性变化时的回调
+	/// 更新本地状态并刷新UI
+	/// </summary>
+	/// <param name="isVisible">模态框是否可见</param>
+	private async Task OnSettingsVisibilityChanged(bool isVisible)
+	{
+		isSettingsVisible = isVisible;
+		StateHasChanged();
+		await Task.Delay(1);
+	}
+
+	/// <summary>
+	/// 设置保存后的处理逻辑
+	/// 重新加载配置或更新UI
+	/// </summary>
+	private async Task OnSettingsSaved()
+	{
+		// 设置保存后的处理逻辑
+		// 可以在这里重新加载配置或更新UI
+		StateHasChanged();
+		await Task.Delay(1);
+
+	}
 }
