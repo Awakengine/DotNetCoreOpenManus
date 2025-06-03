@@ -41,7 +41,7 @@
 ## 项目结构
 
 ```
-OpenManus.Host/
+OpenManus.WebUI/
 ├── Components/
 │   ├── Layout/
 │   │   └── MainLayout.razor      # 主布局组件
@@ -82,7 +82,7 @@ OpenManus.Host/
 
 2. **构建项目**
    ```bash
-   cd OpenManus.Host
+   cd OpenManus.WebUI
    dotnet build
    ```
 

@@ -1,0 +1,415 @@
+@* 
+    文件预览组件 - 用于预览和显示各种类型的文件内容
+    支持代码文件、Markdown、图片、JSON、文本、HTML、PDF等多种格式
+    提供文件信息显示、内容预览、下载功能和错误处理
+*@
+@using OpenManus.WebUI.Models
+@using OpenManus.WebUI.Services
+@inject FileManagementService FileService
+@inject IJSRuntime JSRuntime
+
+@if (File != null && !File.IsDirectory)
+{
+    <div class="file-preview-container">
+        <div class="preview-header">
+            <div class="file-info">
+                <i class="@GetFileIcon(File.Extension) @GetFileIconColor(File.Extension)"></i>
+                <span class="file-name">@File.Name</span>
+                <span class="file-size">(@FormatFileSize(File.Size))</span>
+            </div>
+            <div class="preview-actions">
+                <button class="btn btn-sm btn-outline-secondary" @onclick="RefreshPreview">
+                    <i class="fas fa-refresh"></i>
+                </button>
+                @if (OnClose.HasDelegate)
+                {
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="OnClose">
+                        <i class="fas fa-times"></i>
+                    </button>
+                }
+            </div>
+        </div>
+        
+        <div class="preview-content">
+            @if (isLoading)
+            {
+                <div class="loading-indicator">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>加载中...</p>
+                </div>
+            }
+            else if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>@errorMessage</p>
+                </div>
+            }
+            else
+            {
+                @switch (GetPreviewType(File.Extension))
+                {
+                    case PreviewType.Code:
+                        <div class="code-preview">
+                            <pre><code class="language-@GetLanguageClass(File.Extension)">@content</code></pre>
+                        </div>
+                        break;
+                        
+                    case PreviewType.Markdown:
+                        <div class="markdown-preview">
+                            @((MarkupString)ConvertMarkdownToHtml(content ?? ""))
+                        </div>
+                        break;
+                        
+                    case PreviewType.Image:
+                        <div class="image-preview">
+                            <img src="@GetImageDataUrl()" alt="@File.Name" class="preview-image" />
+                        </div>
+                        break;
+                        
+                    case PreviewType.Json:
+                        <div class="json-preview">
+                            <pre class="json-content">@FormatJson(content ?? "")</pre>
+                        </div>
+                        break;
+                        
+                    case PreviewType.Text:
+                        <div class="text-preview">
+                            <pre class="text-content">@content</pre>
+                        </div>
+                        break;
+                        
+                    case PreviewType.Html:
+                        <div class="html-preview">
+                            <iframe srcdoc="@content" class="html-frame"></iframe>
+                        </div>
+                        break;
+                        
+                    case PreviewType.Pdf:
+                        <div class="pdf-preview">
+                            <div class="pdf-placeholder">
+                                <i class="fas fa-file-pdf fa-3x"></i>
+                                <p>PDF 预览</p>
+                                <p class="text-muted">@File.Name</p>
+                                <button class="btn btn-primary" @onclick="DownloadFile">
+                                    <i class="fas fa-download"></i> 下载查看
+                                </button>
+                            </div>
+                        </div>
+                        break;
+                        
+                    default:
+                        <div class="unsupported-preview">
+                            <i class="fas fa-file fa-3x"></i>
+                            <p>不支持预览此文件类型</p>
+                            <p class="text-muted">@File.Extension.ToUpper() 文件</p>
+                            <button class="btn btn-primary" @onclick="DownloadFile">
+                                <i class="fas fa-download"></i> 下载文件
+                            </button>
+                        </div>
+                        break;
+                }
+            }
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// 要预览的文件信息
+    /// </summary>
+    [Parameter] public OpenManus.WebUI.Models.FileInfo? File { get; set; }
+    
+    /// <summary>
+    /// 关闭预览的回调事件
+    /// </summary>
+    [Parameter] public EventCallback OnClose { get; set; }
+    
+    /// <summary>
+    /// 文件内容
+    /// </summary>
+    private string? content;
+    
+    /// <summary>
+    /// 是否正在加载
+    /// </summary>
+    private bool isLoading = false;
+    
+    /// <summary>
+    /// 错误消息
+    /// </summary>
+    private string? errorMessage;
+    
+    /// <summary>
+    /// 预览类型枚举
+    /// </summary>
+    private enum PreviewType
+    {
+        /// <summary>
+        /// 代码文件
+        /// </summary>
+        Code,
+        /// <summary>
+        /// Markdown文件
+        /// </summary>
+        Markdown,
+        /// <summary>
+        /// 图片文件
+        /// </summary>
+        Image,
+        /// <summary>
+        /// JSON文件
+        /// </summary>
+        Json,
+        /// <summary>
+        /// 文本文件
+        /// </summary>
+        Text,
+        /// <summary>
+        /// HTML文件
+        /// </summary>
+        Html,
+        /// <summary>
+        /// PDF文件
+        /// </summary>
+        Pdf,
+        /// <summary>
+        /// 不支持的文件类型
+        /// </summary>
+        Unsupported
+    }
+    
+    /// <summary>
+    /// 参数设置完成后的生命周期方法
+    /// </summary>
+    protected override async Task OnParametersSetAsync()
+    {
+        if (File != null)
+        {
+            await LoadContent();
+        }
+    }
+    
+    /// <summary>
+    /// 加载文件内容
+    /// </summary>
+    private async Task LoadContent()
+    {
+        if (File == null || File.IsDirectory) return;
+        
+        isLoading = true;
+        errorMessage = null;
+        content = null;
+        StateHasChanged();
+        
+        try
+        {
+            var previewType = GetPreviewType(File.Extension);
+            if (previewType != PreviewType.Image && previewType != PreviewType.Pdf && previewType != PreviewType.Unsupported)
+            {
+                content = await FileService.ReadFileContentAsync(File.Path);
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"无法加载文件: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+    
+    /// <summary>
+    /// 刷新预览内容
+    /// </summary>
+    private async Task RefreshPreview()
+    {
+        await LoadContent();
+    }
+    
+    /// <summary>
+    /// 下载文件
+    /// </summary>
+    private async Task DownloadFile()
+    {
+        if (File != null)
+        {
+            // 在实际实现中，这里应该触发文件下载
+            await JSRuntime.InvokeVoidAsync("alert", $"下载功能待实现: {File.Name}");
+        }
+    }
+    
+    /// <summary>
+    /// 根据文件扩展名获取预览类型
+    /// </summary>
+    /// <param name="extension">文件扩展名</param>
+    /// <returns>预览类型</returns>
+    private PreviewType GetPreviewType(string extension)
+    {
+        return extension.ToLower() switch
+        {
+            ".md" => PreviewType.Markdown,
+            ".json" => PreviewType.Json,
+            ".html" or ".htm" => PreviewType.Html,
+            ".txt" or ".log" or ".cfg" or ".ini" or ".conf" => PreviewType.Text,
+            ".jpg" or ".jpeg" or ".png" or ".gif" or ".bmp" or ".svg" => PreviewType.Image,
+            ".pdf" => PreviewType.Pdf,
+            ".cs" or ".js" or ".ts" or ".py" or ".java" or ".cpp" or ".c" or ".h" or ".css" or ".scss" or ".less" or ".xml" or ".yaml" or ".yml" or ".sql" or ".sh" or ".bat" or ".ps1" => PreviewType.Code,
+            _ => PreviewType.Unsupported
+        };
+    }
+    
+    /// <summary>
+    /// 根据文件扩展名获取语言类名（用于代码高亮）
+    /// </summary>
+    /// <param name="extension">文件扩展名</param>
+    /// <returns>语言类名</returns>
+    private string GetLanguageClass(string extension)
+    {
+        return extension.ToLower() switch
+        {
+            ".cs" => "csharp",
+            ".js" => "javascript",
+            ".ts" => "typescript",
+            ".py" => "python",
+            ".java" => "java",
+            ".cpp" or ".c" => "cpp",
+            ".h" => "c",
+            ".css" => "css",
+            ".scss" => "scss",
+            ".less" => "less",
+            ".xml" => "xml",
+            ".yaml" or ".yml" => "yaml",
+            ".sql" => "sql",
+            ".sh" => "bash",
+            ".bat" => "batch",
+            ".ps1" => "powershell",
+            ".json" => "json",
+            _ => "text"
+        };
+    }
+    
+    /// <summary>
+    /// 将Markdown文本转换为HTML
+    /// </summary>
+    /// <param name="markdown">Markdown文本</param>
+    /// <returns>转换后的HTML</returns>
+    private string ConvertMarkdownToHtml(string markdown)
+    {
+        // 简单的Markdown到HTML转换
+        var html = markdown
+            .Replace("&", "&amp;")
+            .Replace("<", "&lt;")
+            .Replace(">", "&gt;")
+            .Replace("\n", "<br/>")
+            .Replace("# ", "<h1>").Replace("\n", "</h1>\n")
+            .Replace("## ", "<h2>").Replace("\n", "</h2>\n")
+            .Replace("### ", "<h3>").Replace("\n", "</h3>\n")
+            .Replace("- ", "<li>").Replace("\n", "</li>\n");
+        
+        return html;
+    }
+    
+    /// <summary>
+    /// 格式化JSON字符串
+    /// </summary>
+    /// <param name="json">JSON字符串</param>
+    /// <returns>格式化后的JSON</returns>
+    private string FormatJson(string json)
+    {
+        try
+        {
+            var jsonDocument = System.Text.Json.JsonDocument.Parse(json);
+            return System.Text.Json.JsonSerializer.Serialize(jsonDocument, new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+        }
+        catch
+        {
+            return json;
+        }
+    }
+    
+    /// <summary>
+    /// 获取图片的数据URL
+    /// </summary>
+    /// <returns>图片数据URL</returns>
+    private string GetImageDataUrl()
+    {
+        // 在实际实现中，这里应该返回图片的数据URL或路径
+        return $"/api/files/preview?path={Uri.EscapeDataString(File?.Path ?? "")}";
+    }
+    
+    /// <summary>
+    /// 根据文件扩展名获取文件图标类名
+    /// </summary>
+    /// <param name="extension">文件扩展名</param>
+    /// <returns>图标类名</returns>
+    private string GetFileIcon(string extension)
+    {
+        return extension.ToLower() switch
+        {
+            ".txt" => "fas fa-file-alt",
+            ".md" => "fab fa-markdown",
+            ".json" => "fas fa-file-code",
+            ".xml" => "fas fa-file-code",
+            ".html" or ".htm" => "fab fa-html5",
+            ".css" => "fab fa-css3-alt",
+            ".js" => "fab fa-js-square",
+            ".ts" => "fab fa-js-square",
+            ".py" => "fab fa-python",
+            ".cs" => "fas fa-file-code",
+            ".java" => "fab fa-java",
+            ".pdf" => "fas fa-file-pdf",
+            ".jpg" or ".jpeg" or ".png" or ".gif" or ".bmp" => "fas fa-file-image",
+            ".svg" => "fas fa-file-image",
+            _ => "fas fa-file"
+        };
+    }
+    
+    /// <summary>
+    /// 根据文件扩展名获取文件图标颜色类名
+    /// </summary>
+    /// <param name="extension">文件扩展名</param>
+    /// <returns>颜色类名</returns>
+    private string GetFileIconColor(string extension)
+    {
+        return extension.ToLower() switch
+        {
+            ".txt" => "text-secondary",
+            ".md" => "text-info",
+            ".json" => "text-warning",
+            ".xml" => "text-warning",
+            ".html" or ".htm" => "text-danger",
+            ".css" => "text-primary",
+            ".js" or ".ts" => "text-warning",
+            ".py" => "text-success",
+            ".cs" => "text-primary",
+            ".java" => "text-danger",
+            ".pdf" => "text-danger",
+            ".jpg" or ".jpeg" or ".png" or ".gif" or ".bmp" or ".svg" => "text-success",
+            _ => "text-muted"
+        };
+    }
+    
+    /// <summary>
+    /// 格式化文件大小显示
+    /// </summary>
+    /// <param name="bytes">文件大小（字节）</param>
+    /// <returns>格式化后的文件大小字符串</returns>
+    private string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len = len / 1024;
+        }
+        return $"{len:0.#} {sizes[order]}";
+    }
+}

@@ -1,0 +1,147 @@
+﻿@using Microsoft.AspNetCore.Components.Web
+@using OpenManus.WebUI.Models
+@using OpenManus.WebUI.Services
+@using OpenManus.WebUI.Components
+@namespace OpenManus.WebUI.Components.Layout
+@inherits LayoutComponentBase
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+@inject IChatHistoryService ChatHistoryService
+@inject IConfigurationService ConfigurationService
+@inject ILogger<NavMenu> Logger
+@implements IDisposable
+<div class="chat-history-panel">
+	<div class="panel-header">
+		<h5 class="panel-title">对话历史</h5>
+		<button class="btn-new-chat" title="新建对话" @href="/agent">
+			<i class="fas fa-plus"></i>
+		</button>
+	</div>
+
+	<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+	<!-- 左侧对话历史面板Nav -->
+	<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+		<nav class="nav flex-column">
+			@if (chatSessions != null && chatSessions.Any())
+			{
+				@foreach (var session in chatSessions)
+				{
+					<div class="chat-item">
+						<a class="nav-link" href="@($"agent/{session.Id}")">
+							<span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span>
+							<div class="chat-title">@session.Title</div>
+						</a>
+					</div>
+				}
+			}
+		</nav>
+	</div>
+
+	<!-- 底部用户信息和设置区域 -->
+	<div class="chat-history-footer">
+		<div class="user-info">
+			<div class="user-avatar">
+				<i class="fas fa-user"></i>
+			</div>
+			<div class="user-details">
+				<div class="user-name">用户</div>
+				<div class="user-status">在线</div>
+			</div>
+		</div>
+		<div class="footer-actions">
+			<button class="btn-settings" title="设置">
+				<i class="fas fa-cog"></i>
+			</button>
+			<button class="btn-help" title="帮助">
+				<i class="fas fa-question-circle"></i>
+			</button>
+		</div>
+	</div>
+</div>
+
+<!-- 设置弹框 -->
+<SettingsModal IsVisible="false" />
+
+@code {
+
+	/// <summary>
+	/// 当前会话ID
+	/// </summary>
+	private string currentSessionId = "default-session";
+
+	/// <summary>
+	/// 聊天会话列表
+	/// </summary>
+	private List<ChatSessionInfo> chatSessions = new();
+
+	/// <summary>
+	/// 组件初始化时执行
+	/// 从ChatHistoryService加载会话列表
+	/// </summary>
+	protected override async Task OnInitializedAsync()
+	{
+
+		await LoadChatSessionsAsync();
+		StateHasChanged();
+	}
+
+	/// <summary>
+	/// 加载聊天会话列表
+	/// </summary>
+	private async Task LoadChatSessionsAsync()
+	{
+		try
+		{
+			// 从聊天历史服务加载所有会话信息
+			var allSessions = await ChatHistoryService.GetAllSessionsAsync();
+
+			chatSessions = allSessions.Select(kvp => new ChatSessionInfo
+			{
+				Id = kvp.Key,
+				Title = kvp.Value.Messages?.FirstOrDefault(m => m.Role == "user")?.Content?.Substring(0, Math.Min(30,
+			kvp.Value.Messages.FirstOrDefault(m => m.Role == "user")?.Content?.Length ?? 0)) + "..." ?? "新对话",
+				LastActivity = kvp.Value.Messages?.LastOrDefault()?.Timestamp ?? DateTime.Now,
+				MessageCount = kvp.Value.Messages?.Count(m => m.Role != "system") ?? 0,
+				CreatedAt = kvp.Value.Messages?.FirstOrDefault()?.Timestamp ?? DateTime.Now
+			}).OrderByDescending(s => s.LastActivity).ToList();
+
+			// 如果没有会话，创建一个默认会话
+			if (!chatSessions.Any())
+			{
+				chatSessions = new List<ChatSessionInfo>
+{
+new ChatSessionInfo
+{
+Id = currentSessionId,
+Title = "新对话",
+LastActivity = DateTime.Now,
+MessageCount = 0,
+CreatedAt = DateTime.Now
+}
+};
+			}
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, "加载会话列表失败");
+			// 创建默认会话作为后备
+			chatSessions = new List<ChatSessionInfo>
+{
+new ChatSessionInfo
+{
+Id = currentSessionId,
+Title = "新对话",
+LastActivity = DateTime.Now,
+MessageCount = 0,
+CreatedAt = DateTime.Now
+}
+};
+		}
+	}
+
+
+	public void Dispose()
+	{
+		// 清理资源
+	}
+}

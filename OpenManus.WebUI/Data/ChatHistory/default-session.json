@@ -1,0 +1,36 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "现在是几点",
+      "timestamp": "2025-06-03T14:14:20.562139Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "role": "user",
+      "content": "现在是几点",
+      "timestamp": "2025-06-03T14:14:20.562285Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "timestamp": "2025-06-03T14:14:20.664101Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "timestamp": "2025-06-03T14:14:21.624062Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    }
+  ]
+}

@@ -1,5 +1,5 @@
-/OpenManus.Host/bin
-/OpenManus.Host/obj
+/OpenManus.WebUI/bin
+/OpenManus.WebUI/obj
 /.vs/OpenManusDotNetCore/CopilotIndices
 /.vs/OpenManusDotNetCore/DesignTimeBuild
 /.vs/OpenManusDotNetCore/FileContentIndex

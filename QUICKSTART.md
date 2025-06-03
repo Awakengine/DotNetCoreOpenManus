@@ -21,7 +21,7 @@ dotnet --version
 
 ```bash
 # 进入项目目录
-cd OpenManus.Host
+cd OpenManus.WebUI
 
 # 构建项目
 dotnet build
