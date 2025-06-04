@@ -12,7 +12,7 @@
 	<div class="execution-dock" @ref="executionDockRef">
 		<div class="execution-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: @(isCollapsed ? "0" : "10px"); cursor: pointer;" @onclick="ToggleCollapse">
 			<h6 style="color: white; margin: 0; font-weight: 600; font-size: 14px;">
-				@if (ExecutionResult.IsCompleted)
+				@if (ExecutionResult?.IsCompleted == true || (ExecutionResult == null && Messages!= null && Messages.Count > 0))
 				{
 					<i class="fas fa-check-circle" style="color: #4CAF50;"></i>
 				}
@@ -55,7 +55,7 @@
 				}
 			</div>
 		}
-		@if (!string.IsNullOrEmpty(ExecutionResult.FinalResult))
+		@if (!string.IsNullOrEmpty(ExecutionResult?.FinalResult))
 		{
 			<div class="execution-result" style="background: rgba(76,175,80,0.1); border: 1px solid rgba(76,175,80,0.3); border-radius: 6px; padding: 10px; margin-top: 10px;">
 				<strong style="color: #4CAF50; display: flex; align-items: center; margin-bottom: 5px; font-size: 12px;">
@@ -65,7 +65,7 @@
 				<div class="result-content" style="color: white; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 4px; font-family: 'Consolas', monospace; font-size: 11px; max-height: 60px; overflow-y: auto;">@ExecutionResult.FinalResult</div>
 			</div>
 		}
-		@if (!string.IsNullOrEmpty(ExecutionResult.Error))
+		@if (!string.IsNullOrEmpty(ExecutionResult?.Error))
 		{
 			<div class="execution-error" style="background: rgba(244,67,54,0.1); border: 1px solid rgba(244,67,54,0.3); border-radius: 6px; padding: 10px; margin-top: 10px;">
 				<strong style="color: #F44336; display: flex; align-items: center; margin-bottom: 5px; font-size: 12px;">
@@ -84,8 +84,8 @@
 		position: relative;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		border-radius: 12px 12px 12px 12px;
-		padding: 15px 20px;
-		margin: 0 20px 8px px;
+		padding: 15px 20px 20px 20px;
+		margin: 0 20px 8px 20px;
 		box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
 		border: 1px solid rgba(255,255,255,0.1);
 		border-bottom: none;
@@ -127,6 +127,11 @@
 	[Parameter] public AgentExecutionResult? ExecutionResult { get; set; }
 
 	/// <summary>
+	/// AgentMessage列表，包含聊天消息
+	/// </summary>
+	[Parameter] public List<AgentMessage>? Messages { get; set; }
+
+	/// <summary>
 	/// 执行结果变化时的回调事件
 	/// </summary>
 	[Parameter] public EventCallback<AgentExecutionResult?> ExecutionResultChanged { get; set; }
@@ -164,7 +169,7 @@
 	/// <summary>
 	/// 是否显示组件（永久停靠模式）
 	/// </summary>
-	public bool IsVisible => ExecutionResult != null || hasEverExecuted;
+	public bool IsVisible => ExecutionResult != null || hasEverExecuted|| (Messages!= null && Messages.Count > 0);
 
 	/// <summary>
 	/// 是否曾经执行过任务

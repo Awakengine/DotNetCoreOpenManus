@@ -95,7 +95,7 @@
 		@* 底部输入区域容器 *@
 		<div id="bottom-area" style="position: absolute; bottom: 54px;margin-top: 240px; left: 0; right: 0; z-index: 999;">
 			@* 任务执行状态组件 *@
-			<ExecutionStatusDock ExecutionResult="@currentExecution" />
+			<ExecutionStatusDock ExecutionResult="@currentExecution" Messages="@agentMemory?.Messages"/>
 			<!-- 输入框区域 -->
 			<AgentInputArea CurrentMessage="@currentMessage"
 							CurrentMessageChanged="@(value => { currentMessage = value; StateHasChanged(); })"
