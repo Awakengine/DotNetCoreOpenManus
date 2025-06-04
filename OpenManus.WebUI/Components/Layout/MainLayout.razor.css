@@ -333,15 +333,14 @@
     color: #2196f3;
 }
 
+/* 主内容区域 */
 .main-content {
     flex: 1;
-    padding: 1rem;
     overflow-y: auto;
     min-height: 0; /* 确保flex子项可以收缩 */
     height: calc(100vh - 56px); /* 与Agent页面高度保持一致 */
     max-height: calc(100vh - 56px);
 }
-
 
 
 .loading-spinner {

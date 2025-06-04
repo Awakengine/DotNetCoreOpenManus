@@ -226,11 +226,6 @@
     transform: translateY(-1px);
 }
 
-.main-content {
-    flex: 1;
-    overflow: hidden;
-    background: #ffffff;
-}
 
 /* 响应式设计 */
 @media (max-width: 768px) {
@@ -373,7 +368,4 @@
         color: #e9ecef;
     }
     
-    .main-content {
-        background: #1a1a1a;
-    }
 }
