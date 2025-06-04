@@ -447,9 +447,16 @@
 			// 更新底部区域高度
 			await JSRuntime.InvokeVoidAsync("updateBottomAreaHeight");
 
-			// 获取当前会话的内存
-			agentMemory = await ChatHistoryService.GetSessionMemoryAsync(currentSessionId);
-			sessionMemories[currentSessionId] = agentMemory;
+			// 获取当前会话的内存（如果当前内存为空或消息数量为0才重新加载）
+			if (agentMemory == null || agentMemory.Messages.Count == 0)
+			{
+				agentMemory = await ChatHistoryService.GetSessionMemoryAsync(currentSessionId);
+				if (agentMemory == null)
+				{
+					agentMemory = new AgentMemory();
+				}
+				sessionMemories[currentSessionId] = agentMemory;
+			}
 
 			// 添加用户消息并实时保存
 			var userMsg = new AgentMessage
@@ -458,8 +465,8 @@
 				Content = userMessage,
 				Timestamp = DateTime.UtcNow
 			};
-			await ChatHistoryService.AddMessageAsync(currentSessionId, userMsg);
-			agentMemory.AddMessage("user", userMessage);
+			// 只保存到持久化存储，内存会在下次加载时同步，并返回
+		    agentMemory = await ChatHistoryService.AddMessageAsync(currentSessionId, userMsg);
 			currentExecution.Steps.Add("用户消息已添加到会话记忆并保存");
 			await InvokeAsync(StateHasChanged);
 
@@ -481,7 +488,8 @@
 				Content = "",
 				Timestamp = DateTime.UtcNow
 			};
-			agentMemory.Messages.Add(assistantMessage);
+			// 先添加到内存用于流式显示
+			@* agentMemory.Messages.Add(assistantMessage); *@
 			
 			// 强制UI更新以显示空的助手消息
 			await InvokeAsync(StateHasChanged);
@@ -516,8 +524,9 @@
 				};
 			}
 
-			// 保存助手消息到聊天历史服务
-			await ChatHistoryService.AddMessageAsync(currentSessionId, assistantMessage);
+			// 保存助手消息到聊天历史服务（只保存一次）
+				@* agentMemory.Messages.Add(errorMessage); *@
+			agentMemory = await ChatHistoryService.AddMessageAsync(currentSessionId, assistantMessage);
 
 			// 更新执行状态为完成
 			currentExecution.Steps.Add("AI响应接收完成并保存");
@@ -550,8 +559,8 @@
 			
 			if (agentMemory != null)
 			{
-				agentMemory.AddMessage("assistant", errorMessage.Content);
-				await ChatHistoryService.AddMessageAsync(currentSessionId, errorMessage);
+				// 只保存到持久化存储，同时添加到当前内存
+				agentMemory = await ChatHistoryService.AddMessageAsync(currentSessionId, errorMessage);
 			}
 			
 			// 更新执行状态为错误

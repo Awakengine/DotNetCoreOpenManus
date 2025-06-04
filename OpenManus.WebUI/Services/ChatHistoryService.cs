@@ -115,20 +115,21 @@ public class ChatHistoryService : IChatHistoryService
         // 对于重要操作，也可以立即保存
         await SaveSessionToFileAsync(sessionId, memory);
     }
-    
+
     /// <summary>
     /// 添加消息到会话并实时保存
     /// </summary>
     /// <param name="sessionId">会话ID</param>
     /// <param name="message">要添加的消息</param>
     /// <returns>异步任务</returns>
-    public async Task AddMessageAsync(string sessionId, AgentMessage message)
+    public async Task<AgentMemory> AddMessageAsync(string sessionId, AgentMessage message)
     {
         var memory = await GetSessionMemoryAsync(sessionId);
         memory.AddMessage(message.Role, message.Content, message.ToolCallId);
-        
+
         // 实时保存到后台队列
         _saveQueue.Enqueue((sessionId, memory));
+        return memory;
     }
     
     /// <summary>

@@ -28,7 +28,7 @@ public interface IChatHistoryService
     /// <param name="sessionId">会话ID</param>
     /// <param name="message">要添加的消息</param>
     /// <returns>异步任务</returns>
-    Task AddMessageAsync(string sessionId, AgentMessage message);
+    Task<AgentMemory> AddMessageAsync(string sessionId, AgentMessage message);
     
     /// <summary>
     /// 清除指定会话的所有消息

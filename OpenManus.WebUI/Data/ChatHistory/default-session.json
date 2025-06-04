@@ -31,6 +31,54 @@
       "toolCallId": null,
       "metadata": null,
       "executionStatus": null
+    },
+    {
+      "role": "user",
+      "content": "现在几点",
+      "timestamp": "2025-06-04T15:27:56.173547Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "role": "user",
+      "content": "现在几点",
+      "timestamp": "2025-06-04T15:27:37.201412Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "timestamp": "2025-06-04T15:29:38.244068Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "timestamp": "2025-06-04T15:29:44.882195Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "role": "user",
+      "content": "现在时机",
+      "timestamp": "2025-06-04T15:37:27.827121Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "timestamp": "2025-06-04T15:37:31.843372Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
     }
   ]
 }
