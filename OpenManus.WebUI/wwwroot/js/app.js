@@ -105,7 +105,7 @@ window.updateExecutionDockPosition = (executionDockElement) => {
     const inputArea = document.querySelector('.agent-input-area');
     if (!inputArea) {
         // 如果找不到输入框，使用默认位置
-        executionDockElement.style.bottom = '120px';
+        // executionDockElement.style.bottom = '120px';
         return;
     }
     

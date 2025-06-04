@@ -170,14 +170,6 @@
     box-sizing: border-box;
 }
 
-/* Agent 页面现代化样式 */
-.agent-content {
-    display: flex;
-    flex-direction: column;
-    height: auto;
-    background: inherit;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
 
 /* 功能按钮区域 */
 .function-buttons {
@@ -584,12 +576,22 @@
     filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.4));
 }
 
-/* 消息区域 */
+/* Agent 页面现代化样式 */
+.agent-content {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    height: 100vh;
+}
+
+/* 消息区域样式 */
 .agent-messages {
-    flex: 1;
     padding: 24px;
     overflow-y: auto;
     background: transparent;
+    background-color: #2D2D2D2D;
+    padding-bottom: 20px;
+    max-height: calc(100vh - 1px);
+    height:calc(100vh - 56px - var(--bottom-area-height, 240px));
 }
 
 .agent-messages::-webkit-scrollbar {

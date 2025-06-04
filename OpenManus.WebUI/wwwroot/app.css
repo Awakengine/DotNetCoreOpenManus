@@ -66,12 +66,6 @@ html, body {
     overflow: hidden;
 }
 
-.agent-messages {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    background-color: #252526;
-}
 
 .tool-message {
     border-left: 4px solid #ffa500;
@@ -334,10 +328,6 @@ html, body {
     overflow-y: auto;
 }
 
-/* 消息区域样式 */
-.agent-messages {
-    padding-bottom: 20px;
-}
 
 /* 确保内容区域正确滚动 */
 .agent-content {

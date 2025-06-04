@@ -14,7 +14,7 @@
 	<!-- 主内容区域 -->
 	<div class="main-chat-area" style="flex:1;display:flex;flex-direction:column;position:relative;transition:margin-right 0.3s ease;@(isFilePreviewModalVisible ? "margin-right:400px;" : "")">
 		<!-- 消息显示区域 -->
-		<div class="messages-container" style="height:calc(100vh - 56px - var(--bottom-area-height, 120px));overflow-y:auto;flex-shrink:0;">
+		<div class="messages-container" style="verflow-y:auto;flex-shrink:0;">
 			@if (agentMemory == null || !agentMemory.Messages.Any())
 			{
 				<div class="welcome-message">
@@ -93,7 +93,7 @@
 		</div>
 
 		@* 底部输入区域容器 *@
-		<div id="bottom-area" style="position: absolute; bottom: 0; left: 0; right: 0; z-index: 999;">
+		<div id="bottom-area" style="position: absolute; bottom: 54px;margin-top: 240px; left: 0; right: 0; z-index: 999;">
 			@* 任务执行状态组件 *@
 			<ExecutionStatusDock ExecutionResult="@currentExecution" />
 			<!-- 输入框区域 -->
@@ -194,30 +194,61 @@
 </style>
 
 <script>
-	window.updateBottomAreaHeight = function() {
-		function calculateAndSetHeight() {
-			const bottomArea = document.getElementById('bottom-area');
-			if (bottomArea) {
-				const height = bottomArea.offsetHeight;
-				document.documentElement.style.setProperty('--bottom-area-height', height + 'px');
-			}
-		}
-		
-		// 立即计算一次
-		calculateAndSetHeight();
-		
-		// 使用ResizeObserver监听底部区域高度变化
+	// 封装函数：更新 CSS 变量 --bottom-area-height
+	function updateBottomAreaHeight() {
 		const bottomArea = document.getElementById('bottom-area');
+		if (bottomArea) {
+			const height = bottomArea.offsetHeight + 60;
+			document.documentElement.style.setProperty('--bottom-area-height', height + 'px');
+		}
+	}
+
+	// 调整 main 内容高度：根据 bottom-area 高度
+	function adjustMainHeight() {
+		const main = document.getElementById('main');
+		const bottomHeight = getComputedStyle(document.documentElement)
+			.getPropertyValue('--bottom-area-height')
+			.trim()
+			.replace('px', '') || '0';
+		const topHeight = 56; // 顶部导航高度，可根据实际情况设置
+		const calcHeight = `calc(100vh - ${topHeight}px - ${bottomHeight}px)`;
+		if (main) {
+			main.style.height = calcHeight;
+		}
+	}
+
+	// 初始化 & 监听
+	function initDynamicLayout() {
+		const bottomArea = document.getElementById('bottom-area');
+
+		// 初始设置
+		updateBottomAreaHeight();
+		adjustMainHeight();
+
+		// ResizeObserver 监听 bottom 区域高度变化
 		if (bottomArea && window.ResizeObserver) {
-			const resizeObserver = new ResizeObserver(function(entries) {
-				calculateAndSetHeight();
+			const resizeObserver = new ResizeObserver(() => {
+				updateBottomAreaHeight();
+				adjustMainHeight();
 			});
 			resizeObserver.observe(bottomArea);
 		}
-		
-		// 备用方案：定期检查高度变化
-		setInterval(calculateAndSetHeight, 500);
-	};
+
+		// 备用方案：每 500ms 检查一次
+		setInterval(() => {
+			updateBottomAreaHeight();
+			adjustMainHeight();
+		}, 500);
+
+		// 窗口尺寸变化时也更新
+		window.addEventListener('resize', () => {
+			updateBottomAreaHeight();
+			adjustMainHeight();
+		});
+	}
+
+	// 页面加载完成后启动
+	window.addEventListener('load', initDynamicLayout);
 </script>
 
 @code {
