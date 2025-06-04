@@ -13,27 +13,27 @@ public class ChatHistoryService : IChatHistoryService
     /// 数据存储路径
     /// </summary>
     private readonly string _dataPath;
-    
+
     /// <summary>
     /// 内存中的会话缓存，使用线程安全的字典
     /// </summary>
     private readonly ConcurrentDictionary<string, AgentMemory> _sessionCache = new();
-    
+
     /// <summary>
     /// 后台保存任务队列
     /// </summary>
     private readonly ConcurrentQueue<(string sessionId, AgentMemory memory)> _saveQueue = new();
-    
+
     /// <summary>
     /// 后台保存服务的取消令牌
     /// </summary>
     private readonly CancellationTokenSource _cancellationTokenSource = new();
-    
+
     /// <summary>
     /// 后台保存任务
     /// </summary>
     private readonly Task _backgroundSaveTask;
-    
+
     /// <summary>
     /// JSON序列化选项
     /// </summary>
@@ -54,7 +54,7 @@ public class ChatHistoryService : IChatHistoryService
         {
             Directory.CreateDirectory(_dataPath);
         }
-        
+
         // 启动后台保存任务
         _backgroundSaveTask = Task.Run(BackgroundSaveWorker, _cancellationTokenSource.Token);
     }
@@ -80,7 +80,7 @@ public class ChatHistoryService : IChatHistoryService
             {
                 var json = await File.ReadAllTextAsync(filePath);
                 var memory = JsonSerializer.Deserialize<AgentMemory>(json, _jsonOptions) ?? new AgentMemory();
-                
+
                 // 添加到缓存
                 _sessionCache.TryAdd(sessionId, memory);
                 return memory;
@@ -97,7 +97,7 @@ public class ChatHistoryService : IChatHistoryService
         _sessionCache.TryAdd(sessionId, newMemory);
         return newMemory;
     }
-    
+
     /// <summary>
     /// 保存会话内存到持久化存储
     /// </summary>
@@ -108,10 +108,10 @@ public class ChatHistoryService : IChatHistoryService
     {
         // 更新缓存
         _sessionCache.AddOrUpdate(sessionId, memory, (key, oldValue) => memory);
-        
+
         // 添加到后台保存队列
         _saveQueue.Enqueue((sessionId, memory));
-        
+
         // 对于重要操作，也可以立即保存
         await SaveSessionToFileAsync(sessionId, memory);
     }
@@ -125,13 +125,13 @@ public class ChatHistoryService : IChatHistoryService
     public async Task<AgentMemory> AddMessageAsync(string sessionId, AgentMessage message)
     {
         var memory = await GetSessionMemoryAsync(sessionId);
-        memory.AddMessage(message.Role, message.Content, message.ToolCallId);
+        memory.AddMessage(message.OrderBy, message.Role, message.Content, message.ToolCallId);
 
         // 实时保存到后台队列
         _saveQueue.Enqueue((sessionId, memory));
         return memory;
     }
-    
+
     /// <summary>
     /// 清除指定会话的所有消息
     /// </summary>
@@ -149,10 +149,10 @@ public class ChatHistoryService : IChatHistoryService
                 File.Delete(filePath);
             }
         }
-        
+
         await Task.CompletedTask;
     }
-    
+
     /// <summary>
     /// 获取所有会话的基本信息
     /// </summary>
@@ -160,20 +160,20 @@ public class ChatHistoryService : IChatHistoryService
     public async Task<List<ChatSessionInfo>> GetSessionsAsync()
     {
         var sessions = new List<ChatSessionInfo>();
-        
+
         // 扫描数据目录中的所有会话文件
         var files = Directory.GetFiles(_dataPath, "*.json");
-        
+
         foreach (var file in files)
         {
             try
             {
                 var sessionId = Path.GetFileNameWithoutExtension(file);
                 var fileInfo = new System.IO.FileInfo(file);
-                
+
                 // 尝试从缓存获取或加载文件
                 var memory = await GetSessionMemoryAsync(sessionId);
-                
+
                 var sessionInfo = new ChatSessionInfo
                 {
                     Id = sessionId,
@@ -182,7 +182,7 @@ public class ChatHistoryService : IChatHistoryService
                     MessageCount = memory.Messages.Count(m => m.Role != "system"),
                     CreatedAt = fileInfo.CreationTime
                 };
-                
+
                 sessions.Add(sessionInfo);
             }
             catch (Exception ex)
@@ -190,10 +190,10 @@ public class ChatHistoryService : IChatHistoryService
                 Console.WriteLine($"Error loading session info from {file}: {ex.Message}");
             }
         }
-        
+
         return sessions.OrderByDescending(s => s.LastActivity).ToList();
     }
-    
+
     /// <summary>
     /// 删除指定会话
     /// </summary>
@@ -203,7 +203,7 @@ public class ChatHistoryService : IChatHistoryService
     {
         await ClearSessionAsync(sessionId);
     }
-    
+
     /// <summary>
     /// 获取所有会话的详细信息（包含消息内容）
     /// </summary>
@@ -211,12 +211,12 @@ public class ChatHistoryService : IChatHistoryService
     public async Task<Dictionary<string, AgentMemory>> GetAllSessionsAsync()
     {
         var result = new Dictionary<string, AgentMemory>();
-        
+
         if (!Directory.Exists(_dataPath))
         {
             return result;
         }
-        
+
         var files = Directory.GetFiles(_dataPath, "*.json");
         foreach (var file in files)
         {
@@ -234,10 +234,10 @@ public class ChatHistoryService : IChatHistoryService
                 Console.WriteLine($"Error loading session from {file}: {ex.Message}");
             }
         }
-        
+
         return result;
     }
-    
+
     /// <summary>
     /// 获取会话文件路径
     /// </summary>
@@ -249,7 +249,7 @@ public class ChatHistoryService : IChatHistoryService
         var cleanSessionId = string.Join("", sessionId.Split(Path.GetInvalidFileNameChars()));
         return Path.Combine(_dataPath, $"{cleanSessionId}.json");
     }
-    
+
     /// <summary>
     /// 保存会话到文件
     /// </summary>
@@ -269,7 +269,7 @@ public class ChatHistoryService : IChatHistoryService
             Console.WriteLine($"Error saving session {sessionId}: {ex.Message}");
         }
     }
-    
+
     /// <summary>
     /// 后台保存工作线程
     /// </summary>
@@ -277,7 +277,7 @@ public class ChatHistoryService : IChatHistoryService
     private async Task BackgroundSaveWorker()
     {
         var processedSessions = new HashSet<string>();
-        
+
         while (!_cancellationTokenSource.Token.IsCancellationRequested)
         {
             try
@@ -287,7 +287,7 @@ public class ChatHistoryService : IChatHistoryService
                 {
                     processedSessions.Add(saveRequest.sessionId);
                 }
-                
+
                 // 批量保存已处理的会话
                 foreach (var sessionId in processedSessions)
                 {
@@ -296,9 +296,9 @@ public class ChatHistoryService : IChatHistoryService
                         await SaveSessionToFileAsync(sessionId, memory);
                     }
                 }
-                
+
                 processedSessions.Clear();
-                
+
                 // 等待一段时间再处理下一批
                 await Task.Delay(2000, _cancellationTokenSource.Token);
             }
@@ -313,7 +313,7 @@ public class ChatHistoryService : IChatHistoryService
             }
         }
     }
-    
+
     /// <summary>
     /// 生成会话标题
     /// </summary>
@@ -328,10 +328,10 @@ public class ChatHistoryService : IChatHistoryService
             // 截取前30个字符作为标题
             return firstMessage.Length > 30 ? firstMessage.Substring(0, 30) + "..." : firstMessage;
         }
-        
+
         return "新对话";
     }
-    
+
     /// <summary>
     /// 释放资源
     /// </summary>
