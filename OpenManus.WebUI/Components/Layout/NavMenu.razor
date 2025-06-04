@@ -13,9 +13,9 @@
 <div class="chat-history-panel">
 	<div class="panel-header">
 		<h5 class="panel-title">对话历史</h5>
-		<button class="btn-new-chat" title="新建对话" @href="/agent">
+		<a class="btn-new-chat" title="新建对话" href="agent/new">
 			<i class="fas fa-plus"></i>
-		</button>
+		</a>
 	</div>
 
 	<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
@@ -80,7 +80,6 @@
 	/// </summary>
 	protected override async Task OnInitializedAsync()
 	{
-
 		await LoadChatSessionsAsync();
 		StateHasChanged();
 	}
@@ -109,16 +108,16 @@
 			if (!chatSessions.Any())
 			{
 				chatSessions = new List<ChatSessionInfo>
-{
-new ChatSessionInfo
-{
-Id = currentSessionId,
-Title = "新对话",
-LastActivity = DateTime.Now,
-MessageCount = 0,
-CreatedAt = DateTime.Now
-}
-};
+				{
+					new ChatSessionInfo
+					{
+						Id = currentSessionId,
+						Title = "新对话",
+						LastActivity = DateTime.Now,
+						MessageCount = 0,
+						CreatedAt = DateTime.Now
+					}
+				};
 			}
 		}
 		catch (Exception ex)
@@ -126,16 +125,16 @@ CreatedAt = DateTime.Now
 			Logger.LogError(ex, "加载会话列表失败");
 			// 创建默认会话作为后备
 			chatSessions = new List<ChatSessionInfo>
-{
-new ChatSessionInfo
-{
-Id = currentSessionId,
-Title = "新对话",
-LastActivity = DateTime.Now,
-MessageCount = 0,
-CreatedAt = DateTime.Now
-}
-};
+			{
+				new ChatSessionInfo
+				{
+					Id = currentSessionId,
+					Title = "新对话",
+					LastActivity = DateTime.Now,
+					MessageCount = 0,
+					CreatedAt = DateTime.Now
+				}
+			};
 		}
 	}
 

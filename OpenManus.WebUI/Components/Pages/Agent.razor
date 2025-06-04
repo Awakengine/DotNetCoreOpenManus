@@ -272,8 +272,6 @@
 		public string Content { get; set; } = string.Empty;
 	}
 
-
-
 	/// <summary>
 	/// 组件初始化时的异步方法
 	/// </summary>
@@ -577,11 +575,6 @@
 		await JSRuntime.InvokeVoidAsync("smoothScrollToBottom", "agent-messages");
 	}
 
-
-
-
-
-
 	/// <summary>
 	/// 加载当前会话的记忆
 	/// </summary>
@@ -640,9 +633,6 @@
 	}
 
 
-
-
-
 	/// <summary>
 	/// 显示文件预览
 	/// </summary>
@@ -654,9 +644,7 @@
 		await LoadFilePreview(filePath);
 		OpenFilePreviewModal();
 	}
-
-
-
+	
 	/// <summary>
 	/// 加载文件内容
 	/// </summary>
