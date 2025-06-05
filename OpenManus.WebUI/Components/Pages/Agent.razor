@@ -42,54 +42,56 @@
 					支持多会话管理、实时消息流、工具调用结果展示和文件操作
 				*@
 				<!-- 内容流式输出展示区，实时滚动定位到底部 -->
-				<div class="agent-messages" id="agentMessages">
-					@foreach (var message in agentMemory.Messages.Where(m => m.Role != "system"))
-					{
-						<div class="message @GetMessageClass(message.Role)">
-							<div class="message-avatar">
-								@if (message.Role == "user")
-								{
-									<i class="fas fa-user"></i>
-								}
-								else if (message.Role == "assistant")
-								{
-									<i class="fas fa-robot"></i>
-								}
-								else if (message.Role == "tool")
-								{
-									<i class="fas fa-cog"></i>
-								}
-							</div>
-							<div class="message-content">
-								<div class="message-text">
-									@if (message.Role == "tool")
+				<div class="agent-messages-bottom ">
+					<div class="agent-messages" id="agentMessages">
+						@foreach (var message in agentMemory.Messages.Where(m => m.Role != "system"))
+						{
+							<div class="message @GetMessageClass(message.Role)">
+								<div class="message-avatar">
+									@if (message.Role == "user")
 									{
-										<div class="tool-result">
-											<strong>工具执行结果:</strong>
-											<pre>@message.Content</pre>
-										</div>
+										<i class="fas fa-user"></i>
 									}
-									else
+									else if (message.Role == "assistant")
 									{
-										@((MarkupString)FormatMessageContent(message.Content))
-										@if (message.Role == "assistant" && ContainsFileReference(message.Content))
-										{
-											<div class="file-actions">
-												@foreach (var fileRef in ExtractFileReferences(message.Content))
-												{
-													<button class="btn btn-sm btn-outline-primary file-preview-btn"
-															@onclick="() => ShowFilePreview(fileRef.Name, fileRef.Path)">
-														<i class="fas fa-eye"></i> 预览 @fileRef.Name
-													</button>
-												}
-											</div>
-										}
+										<i class="fas fa-robot"></i>
+									}
+									else if (message.Role == "tool")
+									{
+										<i class="fas fa-cog"></i>
 									}
 								</div>
-								<div class="message-time">@message.Timestamp.ToString("HH:mm:ss")</div>
+								<div class="message-content">
+									<div class="message-text">
+										@if (message.Role == "tool")
+										{
+											<div class="tool-result">
+												<strong>工具执行结果:</strong>
+												<pre>@message.Content</pre>
+											</div>
+										}
+										else
+										{
+											@((MarkupString)FormatMessageContent(message.Content))
+											@if (message.Role == "assistant" && ContainsFileReference(message.Content))
+											{
+												<div class="file-actions">
+													@foreach (var fileRef in ExtractFileReferences(message.Content))
+													{
+														<button class="btn btn-sm btn-outline-primary file-preview-btn"
+																@onclick="() => ShowFilePreview(fileRef.Name, fileRef.Path)">
+															<i class="fas fa-eye"></i> 预览 @fileRef.Name
+														</button>
+													}
+												</div>
+											}
+										}
+									</div>
+									<div class="message-time">@message.Timestamp.ToString("HH:mm:ss")</div>
+								</div>
 							</div>
-						</div>
-					}
+						}
+					</div>
 				</div>
 			}
 
