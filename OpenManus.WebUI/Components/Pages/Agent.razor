@@ -42,6 +42,7 @@
 					支持多会话管理、实时消息流、工具调用结果展示和文件操作
 				*@
 				<!-- 内容流式输出展示区，实时滚动定位到底部 -->
+				<div class="agent-messages-container">
 				<div class="agent-messages" id="agentMessages">
 					@foreach (var message in agentMemory.Messages.Where(m => m.Role != "system"))
 					{
@@ -90,6 +91,7 @@
 							</div>
 						</div>
 					}
+				</div>
 				</div>
 			}
 

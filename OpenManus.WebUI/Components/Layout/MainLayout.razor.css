@@ -16,16 +16,17 @@
     align-items: center;
     min-height: 56px;
     padding: 0 24px;
-    background-color: #ffffff;
-    border-bottom: 1px solid #e0e0e0;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    color: white;
+    background-color: #2D2D2D;
+    border-bottom: 1px solid #141313;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .panel-title {
     margin: 0;
     font-size: 1.1rem;
     font-weight: 600;
-    color: #333;
+    color: #ffffff;
 }
 
 /* 左侧对话历史面板 */
@@ -139,8 +140,10 @@
     flex: 1;
     overflow-y: auto;
     padding: 10px;
-    max-height: calc(100vh - 120px); /* 减去头部和底部的高度，与视口高度保持一致 */
-    min-height: 0; /* 确保flex子项可以收缩 */
+    max-height: calc(100vh - 120px);
+    /* 减去头部和底部的高度，与视口高度保持一致 */
+    min-height: 0;
+    /* 确保flex子项可以收缩 */
 }
 
 /* 底部用户信息和设置区域 */
@@ -337,8 +340,10 @@
 .main-content {
     flex: 1;
     overflow-y: auto;
-    min-height: 0; /* 确保flex子项可以收缩 */
-    height: calc(100vh - 56px); /* 与Agent页面高度保持一致 */
+    min-height: 0;
+    /* 确保flex子项可以收缩 */
+    height: calc(100vh - 56px);
+    /* 与Agent页面高度保持一致 */
     max-height: calc(100vh - 56px);
 }
 
@@ -361,7 +366,8 @@
     gap: 8px;
 }
 
-.btn-dock, .btn-collapse {
+.btn-dock,
+.btn-collapse {
     background: none;
     border: 1px solid #ddd;
     border-radius: 6px;
@@ -371,7 +377,8 @@
     transition: all 0.2s;
 }
 
-.btn-dock:hover, .btn-collapse:hover {
+.btn-dock:hover,
+.btn-collapse:hover {
     background-color: #f8f9fa;
     border-color: #adb5bd;
 }
@@ -383,7 +390,7 @@
     .layout-container {
         grid-template-columns: 250px 1fr;
     }
-    
+
     .content-area {
         grid-template-columns: 1fr 300px;
     }
@@ -394,16 +401,16 @@
         grid-template-columns: 1fr;
         grid-template-rows: auto 1fr;
     }
-    
+
     .chat-history-panel {
         border-right: none;
         border-bottom: 1px solid #e9ecef;
         max-height: 200px;
         min-width: auto;
     }
-    
 
-    
+
+
     .chat-actions {
         opacity: 1;
     }
@@ -423,9 +430,9 @@
     z-index: 1000;
 }
 
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
-    }
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}

@@ -623,8 +623,13 @@
 }
 
 /* 消息区域样式 */
+.agent-messages-container {
+       height: calc(100vh - 56px);
+       background-color: #2D2D2D;
+}
+
 .agent-messages {
-    padding: 24px;
+    margin: 0 20px 20px 20px;
     overflow-y: auto;
     background: rgba(59, 59, 59, 0.8);
     padding-bottom: 20px;

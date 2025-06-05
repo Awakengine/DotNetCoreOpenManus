@@ -17,7 +17,7 @@
 
 .top-row {
     min-height: 3.5rem;
-    background-color: rgba(0,0,0,0.4);
+    background-color: rgba(0, 0, 0, 0.4);
 }
 
 .navbar-brand {
@@ -51,33 +51,33 @@
     padding-bottom: 0.5rem;
 }
 
-    .nav-item:first-of-type {
-        padding-top: 1rem;
-    }
+.nav-item:first-of-type {
+    padding-top: 1rem;
+}
 
-    .nav-item:last-of-type {
-        padding-bottom: 1rem;
-    }
+.nav-item:last-of-type {
+    padding-bottom: 1rem;
+}
 
-    .nav-item ::deep .nav-link {
-        color: #d7d7d7;
-        background: none;
-        border: none;
-        border-radius: 4px;
-        height: 3rem;
-        display: flex;
-        align-items: center;
-        line-height: 3rem;
-        width: 100%;
-    }
+.nav-item ::deep .nav-link {
+    color: #d7d7d7;
+    background: none;
+    border: none;
+    border-radius: 4px;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    line-height: 3rem;
+    width: 100%;
+}
 
 .nav-item ::deep a.active {
-    background-color: rgba(255,255,255,0.37);
+    background-color: rgba(255, 255, 255, 0.37);
     color: white;
 }
 
 .nav-item ::deep .nav-link:hover {
-    background-color: rgba(255,255,255,0.1);
+    background-color: rgba(255, 255, 255, 0.1);
     color: white;
 }
 
@@ -85,7 +85,7 @@
     display: none;
 }
 
-.navbar-toggler:checked ~ .nav-scrollable {
+.navbar-toggler:checked~.nav-scrollable {
     display: block;
 }
 
@@ -136,29 +136,29 @@
 }
 
 .chat-item {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
     border-radius: 8px;
     padding: 0.75rem;
     margin-bottom: 0.5rem;
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
-    color: #e8e8e8;
+    color: #e8e8e8 !important;
 }
 
 .chat-item:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
     transform: translateX(2px);
     color: #ffffff;
 }
 
 .chat-item.active {
-    background: rgba(64, 158, 255, 0.2);
-    border-color: rgba(64, 158, 255, 0.4);
+    background: rgba(64, 158, 255, 0.2) !important;
+    border-color: rgba(64, 158, 255, 0.4) !important;
     color: #fff;
-    box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3) !important;
 }
 
 .chat-title {
@@ -253,12 +253,14 @@
 
 /* 底部用户信息样式 */
 .chat-history-footer {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
     padding: 0.75rem;
     background-color: rgba(0, 0, 0, 0.2);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: #2D2D2D !important;
+    color: white !important;
 }
 
 .user-info {
@@ -304,7 +306,7 @@
 .btn-help {
     background: rgba(255, 255, 255, 0.1);
     border: none;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgb(22, 245, 241);
     border-radius: 4px;
     padding: 0.25rem;
     cursor: pointer;
@@ -359,38 +361,41 @@
     align-items: center;
     min-height: 56px;
     padding: 0 24px;
-    background-color: #ffffff;
-    border-bottom: 1px solid #e0e0e0;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    background-color: #2D2D2D;
+    border-bottom: 1px solid #0b0b0b;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    background: #2D2D2D !important;
 }
 
 .panel-title {
     margin: 0;
     font-size: 1.1rem;
     font-weight: 600;
-    color: #333;
+    color: #ffffff;
+    background: #2D2D2D !important;
 }
 
 /* 左侧对话历史面板 */
 .chat-history-panel {
-    background: white;
-    border-right: 1px solid #e9ecef;
+    background: #2D2D2D !important;
+    border-right: 1px solid #0b0b0b !important;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     min-width: 250px;
     height: 100vh;
     max-height: 100vh;
+    color: #fff;
 }
 
 /* 对话历史头部 */
 .chat-history-header {
     padding: 16px;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid #0b0b0b;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #f8f9fa;
+    background: #2D2D2D;
     flex-shrink: 0;
 }
 
@@ -398,7 +403,8 @@
     margin: 0;
     font-size: 16px;
     font-weight: 600;
-    color: #333;
+    color: #fff;
+    background: #2D2D2D !important;
 }
 
 /* 空状态样式 */
@@ -409,7 +415,7 @@
     justify-content: center;
     padding: 40px 20px;
     text-align: center;
-    color: #6c757d;
+    color: #fff;
 }
 
 .empty-state p {
@@ -482,8 +488,10 @@
     flex: 1;
     overflow-y: auto;
     padding: 10px;
-    max-height: calc(100vh - 120px); /* 减去头部和底部的高度，与视口高度保持一致 */
-    min-height: 0; /* 确保flex子项可以收缩 */
+    max-height: calc(100vh - 120px);
+    /* 减去头部和底部的高度，与视口高度保持一致 */
+    min-height: 0;
+    /* 确保flex子项可以收缩 */
 }
 
 /* 底部用户信息和设置区域 */
@@ -564,13 +572,14 @@
 
 .chat-item {
     padding: 12px 16px;
-    border-bottom: 1px solid #f1f3f4;
+    border-bottom: 1px solid #0b0b0b;
     cursor: pointer;
     transition: background-color 0.2s ease;
     position: relative;
     display: flex;
     flex-direction: column;
     gap: 4px;
+    color: white;
 }
 
 .chat-item:hover {
@@ -616,6 +625,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: white;
 }
 
 .chat-time {
@@ -694,7 +704,8 @@
     gap: 8px;
 }
 
-.btn-dock, .btn-collapse {
+.btn-dock,
+.btn-collapse {
     background: none;
     border: 1px solid #ddd;
     border-radius: 6px;
@@ -704,7 +715,8 @@
     transition: all 0.2s;
 }
 
-.btn-dock:hover, .btn-collapse:hover {
+.btn-dock:hover,
+.btn-collapse:hover {
     background-color: #f8f9fa;
     border-color: #adb5bd;
 }
@@ -716,7 +728,7 @@
     .layout-container {
         grid-template-columns: 250px 1fr;
     }
-    
+
     .content-area {
         grid-template-columns: 1fr 300px;
     }
@@ -727,16 +739,16 @@
         grid-template-columns: 1fr;
         grid-template-rows: auto 1fr;
     }
-    
+
     .chat-history-panel {
         border-right: none;
-        border-bottom: 1px solid #e9ecef;
+        border-bottom: 1px solid #0b0b0b;
         max-height: 200px;
         min-width: auto;
     }
-    
 
-    
+
+
     .chat-actions {
         opacity: 1;
     }
@@ -756,9 +768,9 @@
     z-index: 1000;
 }
 
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
-    }
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
