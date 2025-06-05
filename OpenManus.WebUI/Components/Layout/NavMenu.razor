@@ -13,7 +13,7 @@
 <div class="chat-history-panel">
 	<div class="panel-header">
 		<h5 class="panel-title">对话历史</h5>
-		<a class="btn-new-chat" title="新建对话" href="agent/new">
+		<a class="btn-new-chat" title="新建对话" href="@($"agent/new_{Guid.NewGuid()}")">
 			<i class="fas fa-plus"></i>
 		</a>
 	</div>
@@ -26,7 +26,7 @@
 			{
 				@foreach (var session in chatSessions)
 				{
-					<div class="chat-item">
+					<div class="chat-item" href="@($"agent/{session.Id}")">
 						<a class="nav-link" href="@($"agent/{session.Id}")">
 							<span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span>
 							<span class="chat-title">@session.Title</span>
@@ -49,18 +49,23 @@
 			</div>
 		</div>
 		<div class="footer-actions">
-			<button class="btn-settings" title="设置">
+			@* <button class="btn-settings" title="设置" @onclick="ShowSettingsModal">
 				<i class="fas fa-cog"></i>
-			</button>
+			</button> *@
+			<button class="btn-settings" title="设置" @onclick="ShowSettingsModal">设置</button>
+
 			<button class="btn-help" title="帮助">
 				<i class="fas fa-question-circle"></i>
 			</button>
 		</div>
+		<p class="debug">模态框状态：@(isSettingsModalVisible ? "显示中" : "隐藏")</p>
+
 	</div>
 </div>
 
 <!-- 设置弹框 -->
-<SettingsModal IsVisible="false" />
+@* <SettingsModal IsVisible="@isSettingsModalVisible" IsVisibleChanged="@OnSettingsModalVisibilityChanged" /> *@
+<SettingsModal @bind-IsVisible="isSettingsModalVisible" />
 
 @code {
 
@@ -73,6 +78,11 @@
 	/// 聊天会话列表
 	/// </summary>
 	private List<ChatSessionInfo> chatSessions = new();
+
+	/// <summary>
+	/// 设置模态框是否可见
+	/// </summary>
+	private bool isSettingsModalVisible = false;
 
 	/// <summary>
 	/// 组件初始化时执行
@@ -98,7 +108,7 @@
 				{
 					Id = kvp.Key,
 					Title = kvp.Value.Messages?.FirstOrDefault(m => m.Role == "user")?.Content?.Substring(0, Math.Min(30,
-				kvp.Value.Messages.FirstOrDefault(m => m.Role == "user")?.Content?.Length ?? 0)) + "..." ?? "新对话",
+					kvp.Value.Messages.FirstOrDefault(m => m.Role == "user")?.Content?.Length ?? 0)) + "..." ?? "新对话",
 					LastActivity = kvp.Value.Messages?.LastOrDefault()?.Timestamp ?? DateTime.Now,
 					MessageCount = kvp.Value.Messages?.Count(m => m.Role != "system") ?? 0,
 					CreatedAt = kvp.Value.Messages?.FirstOrDefault()?.Timestamp ?? DateTime.Now
@@ -138,6 +148,24 @@
 		}
 	}
 
+
+	/// <summary>
+	/// 显示设置模态框
+	/// </summary>
+	private void ShowSettingsModal()
+	{
+		isSettingsModalVisible = true;
+	}
+
+	/// <summary>
+	/// 设置模态框可见性变化回调
+	/// </summary>
+	/// <param name="isVisible">是否可见</param>
+	private void OnSettingsModalVisibilityChanged(bool isVisible)
+	{
+		isSettingsModalVisible = isVisible;
+		InvokeAsync(StateHasChanged); // 强制触发重新渲染
+	}
 
 	public void Dispose()
 	{
