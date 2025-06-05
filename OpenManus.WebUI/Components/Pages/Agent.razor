@@ -12,9 +12,9 @@
 @rendermode InteractiveServer
 
 <PageTitle>OpenManus Agent</PageTitle>
-<div class="agent-content" style="display:flex;flex-direction:column;height:calc(100vh - 56px);position:relative;">
+<div class="agent-content" style="display:flex;flex-direction:column;height:calc(100vh - 56px);position:relative;align-items:center;">
 	<!-- 主内容区域 -->
-	<div class="main-chat-area" style="@(isFilePreviewModalVisible ? "margin-right:400px;" : "")">
+	<div class="main-chat-area" style="@(isFilePreviewModalVisible ? "margin-right:calc(100vw - 1230px);" : "")">
 		<!-- 消息显示区域 -->
 		<div class="messages-container" style="overflow-y:auto;flex-shrink:0;">
 			@if (agentMemory == null || !agentMemory.Messages.Any())
@@ -166,6 +166,7 @@
 		flex-direction: column;
 		position: relative;
 		transition: margin-right 0.3s ease;
+		width: 100%;
 		max-width: 900px;
 	}
 
