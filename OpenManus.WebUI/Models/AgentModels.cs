@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace OpenManus.WebUI.Models;
@@ -339,5 +340,43 @@ public class AgentExecutionResult
     /// LLM使用情况统计
     /// </summary>
     public LlmUsage? Usage { get; set; }
+}
+
+/// <summary>
+/// 模型信息DTO类
+/// </summary>
+public class ModelInfo
+{
+    /// <summary>
+    /// 模型ID
+    /// </summary>
+    public string Id { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 对象类型
+    /// </summary>
+    public string Object { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 拥有者
+    /// </summary>
+    [JsonPropertyName("owned_by")]
+    public string? OwnedBy { get; set; }
+}
+
+/// <summary>
+/// 模型列表响应DTO类
+/// </summary>
+public class ModelsResponse
+{
+    /// <summary>
+    /// 对象类型
+    /// </summary>
+    public string Object { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 模型数据列表
+    /// </summary>
+    public List<ModelInfo> Data { get; set; } = new();
 }
 

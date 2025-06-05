@@ -67,7 +67,7 @@ public class AgentService
     /// <param name="userMessage">用户消息</param>
     /// <param name="maxSteps">最大执行步数</param>
     /// <returns>代理执行结果</returns>
-    public async Task<AgentExecutionResult> ExecuteTaskAsync(string sessionId, string userMessage, int maxSteps = 2)
+    public async Task<AgentExecutionResult> ExecuteTaskAsync(string sessionId, string userMessage, int maxSteps = 2, string? customModel = null)
     {
         var memory = GetOrCreateSession(sessionId);
         memory.AddMessage(memory.Messages.Count + 1, "user", userMessage);
@@ -84,7 +84,7 @@ public class AgentService
 
             for (int step = 1; step <= maxSteps; step++)
             {
-                var (stepResult, usage) = await ExecuteStepAsync(memory, step);
+                var (stepResult, usage) = await ExecuteStepAsync(memory, step, customModel);
                 result.Steps.Add($"Step {step}: {stepResult.Content}");
 
                 // 累计使用情况统计
@@ -142,15 +142,16 @@ public class AgentService
     /// </summary>
     /// <param name="memory">代理内存</param>
     /// <param name="stepNumber">步骤编号</param>
+    /// <param name="customModel">自定义模型</param>
     /// <returns>代理响应和使用情况统计</returns>
-    private async Task<(AgentResponse response, LlmUsage? usage)> ExecuteStepAsync(AgentMemory memory, int stepNumber)
+    private async Task<(AgentResponse response, LlmUsage? usage)> ExecuteStepAsync(AgentMemory memory, int stepNumber, string? customModel = null)
     {
         // 构建系统提示
         var systemPrompt = BuildSystemPrompt();
         memory.Messages.Insert(0, new AgentMessage { Role = "system", Content = systemPrompt });
 
         // 调用真实的LLM API
-        var (response, usage) = await SimulateAIResponseAsync(memory, stepNumber);
+        (AgentResponse response, LlmUsage? usage) = await SimulateAIResponseAsync(memory, stepNumber, customModel);
 
         memory.AddMessage(memory.Messages.Count + 1, "assistant", response.Content);
         return (response, usage);
@@ -162,7 +163,7 @@ public class AgentService
     /// <param name="memory">代理内存</param>
     /// <param name="stepNumber">步骤编号</param>
     /// <returns>代理响应</returns>
-    private async Task<(AgentResponse response, LlmUsage? usage)> SimulateAIResponseAsync(AgentMemory memory, int stepNumber)
+    private async Task<(AgentResponse response, LlmUsage? usage)> SimulateAIResponseAsync(AgentMemory memory, int stepNumber, string? customModel = null)
     {
         try
         {
@@ -176,10 +177,10 @@ public class AgentService
                 content = m.Content
             }).ToList();
 
-            // 构建请求体
+            // 构建请求体，优先使用自定义模型
             var requestBody = new
             {
-                model = llmConfig.Model,
+                model = customModel ?? llmConfig.Model,
                 messages = messages,
                 max_tokens = llmConfig.MaxTokens,
                 temperature = llmConfig.Temperature,
@@ -263,7 +264,7 @@ public class AgentService
     /// <param name="onContentReceived">接收到内容时的回调</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>最终的代理响应和使用情况统计</returns>
-    public async Task<(AgentResponse response, LlmUsage? usage)> StreamAIResponseAsync(AgentMemory memory, Func<string, Task> onContentReceived, CancellationToken cancellationToken = default)
+    public async Task<(AgentResponse response, LlmUsage? usage)> StreamAIResponseAsync(AgentMemory memory, Func<string, Task> onContentReceived, CancellationToken cancellationToken = default, string? customModel = null)
     {
         try
         {
@@ -283,10 +284,10 @@ public class AgentService
                 content = m.Content
             }).ToList();
 
-            // 构建请求体（启用流式响应）
+            // 构建请求体（启用流式响应），优先使用自定义模型
             var requestBody = new
             {
-                model = llmConfig.Model,
+                model = customModel ?? llmConfig.Model,
                 messages = messages,
                 max_tokens = llmConfig.MaxTokens,
                 temperature = llmConfig.Temperature,

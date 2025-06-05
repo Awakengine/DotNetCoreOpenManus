@@ -105,6 +105,8 @@
 							IsProcessing="@isProcessing"
 							IsFilePreviewVisible="@isFilePreviewModalVisible"
 							SelectedFiles="@selectedFiles"
+							SelectedModel="@selectedModel"
+							SelectedModelChanged="@(value => { selectedModel = value; StateHasChanged(); })"
 							OnExecuteTask="@ExecuteTask"
 							OnOpenFilePreview="@OpenFilePreviewModal"
 							OnFileSelected="@OnFileSelected"
@@ -264,6 +266,11 @@
 	/// 当前输入的消息
 	/// </summary>
 	private string currentMessage = string.Empty;
+
+	/// <summary>
+	/// 当前选择的模型
+	/// </summary>
+	private string selectedModel = string.Empty;
 
 	/// <summary>
 	/// 是否正在处理任务
@@ -493,7 +500,7 @@
 			currentExecution.Steps.Add("开始接收AI响应...");
 			await InvokeAsync(StateHasChanged);
 
-			// 使用流式API获取响应
+			// 使用流式API获取响应，传递用户选择的模型
 			var (response, usage) = await AgentService.StreamAIResponseAsync(
 				tempAgentMemory,
 				async (deltaContent) =>
@@ -504,7 +511,9 @@
 					await InvokeAsync(StateHasChanged);
 					await Task.Delay(50); // 稍微延迟以获得更好的视觉效果
 					await JSRuntime.InvokeVoidAsync("smoothScrollToBottom", "agentMessages");
-				}
+				},
+				CancellationToken.None,
+				!string.IsNullOrEmpty(selectedModel) ? selectedModel : null
 			);
 			tempAgentMemory.Messages.Add(assistantMessage);
 
