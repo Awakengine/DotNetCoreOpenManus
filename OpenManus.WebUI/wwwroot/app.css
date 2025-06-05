@@ -30,7 +30,7 @@ html, body {
 }
 
 .tool-item {
-    background-color: #2d2d30;
+    background-color: #1e1e1e;
     border: 1px solid #333333;
     border-radius: 8px;
     padding: 15px;
@@ -39,7 +39,7 @@ html, body {
 }
 
 .tool-item:hover {
-    background-color: #3e3e42;
+    background-color: #2d2d30;
     border-color: #007acc;
 }
 
@@ -76,7 +76,7 @@ html, body {
 }
 
 .tool-result {
-    background-color: #2d2d30;
+    background-color: #1e1e1e;
     border: 1px solid #333333;
     border-radius: 6px;
     padding: 10px;
@@ -133,7 +133,7 @@ html, body {
 }
 
 .execution-result {
-    background-color: #2d2d30;
+    background-color: #1e1e1e;
     border: 1px solid #28a745;
     border-radius: 6px;
     padding: 10px;
@@ -150,7 +150,7 @@ html, body {
 }
 
 .execution-error {
-    background-color: #2d2d30;
+    background-color: #1e1e1e;
     border: 1px solid #dc3545;
     border-radius: 6px;
     padding: 10px;
@@ -194,7 +194,7 @@ html, body {
 
 /* 输入控制区域样式 - 上圆角 */
 .agent-input-area-fixed .input-controls {
-    background-color: #2d2d30;
+    background-color: #1e1e1e;
     border-bottom: 1px solid #333;
     border-radius: 12px 12px 0 0;
     margin: 0;
@@ -221,7 +221,7 @@ html, body {
 
 /* 按钮区域样式 - 下圆角 */
 .agent-input-area-fixed .input-group {
-    background-color: #2d2d30;
+    background-color: #1e1e1e;
     border-radius: 0 0 12px 12px;
     padding: 12px 15px;
     margin: 0;
@@ -310,7 +310,7 @@ html, body {
 
 /* 附件显示区域 */
 .agent-input-area-fixed .mt-2 {
-    background-color: #2d2d30;
+    background-color: #1e1e1e;
     padding: 8px 15px;
     margin: 0;
     border-top: 1px solid #333;

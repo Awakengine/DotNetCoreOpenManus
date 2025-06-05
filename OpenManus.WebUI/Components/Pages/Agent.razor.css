@@ -215,7 +215,7 @@
     }
 
 .session-delete-btn:hover {
-    background-color: #dc3545 !important;
+    background-color: #F44336 !important;
     color: white !important;
 }
 
@@ -625,7 +625,7 @@
 /* 消息区域样式 */
 .agent-messages-container {
        height: calc(100vh - 56px);
-       background-color: #2D2D2D;
+       background-color: #252526;
 }
 
 .agent-messages {

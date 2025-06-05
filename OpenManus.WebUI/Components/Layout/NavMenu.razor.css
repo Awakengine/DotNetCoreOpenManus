@@ -361,7 +361,7 @@
     align-items: center;
     min-height: 56px;
     padding: 0 24px;
-    background-color: #2D2D2D;
+    background-color: #252526;
     border-bottom: 1px solid #0b0b0b;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
     background: #2D2D2D !important;
@@ -717,7 +717,7 @@
 
 .btn-dock:hover,
 .btn-collapse:hover {
-    background-color: #f8f9fa;
+    background-color: #1e1e1e;
     border-color: #adb5bd;
 }
 
