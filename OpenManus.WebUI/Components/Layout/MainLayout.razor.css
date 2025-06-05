@@ -56,7 +56,7 @@
     margin: 0;
     font-size: 16px;
     font-weight: 600;
-    color: #333;
+    color: #ffffff;
 }
 
 /* 空状态样式 */
@@ -67,7 +67,7 @@
     justify-content: center;
     padding: 40px 20px;
     text-align: center;
-    color: #6c757d;
+    color: #cccccc;
 }
 
 .empty-state p {
@@ -94,7 +94,7 @@
 .chat-title {
     font-size: 14px;
     font-weight: 500;
-    color: #333;
+    color: #ffffff;
     margin-bottom: 4px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -106,15 +106,15 @@
     justify-content: space-between;
     align-items: center;
     font-size: 12px;
-    color: #6c757d;
+    color: #cccccc;
 }
 
 .chat-time {
-    color: #6c757d;
+    color: #cccccc;
 }
 
 .chat-count {
-    color: #28a745;
+    color: #4CAF50;
 }
 
 .btn-new-chat {
@@ -185,13 +185,13 @@
 .user-name {
     font-size: 14px;
     font-weight: 500;
-    color: #333;
+    color: #ffffff;
     margin-bottom: 2px;
 }
 
 .user-status {
     font-size: 12px;
-    color: #28a745;
+    color: #4CAF50;
 }
 
 .footer-actions {
@@ -203,7 +203,7 @@
 .btn-help {
     background: none;
     border: none;
-    color: #6c757d;
+    color: #cccccc;
     padding: 8px;
     border-radius: 6px;
     cursor: pointer;
@@ -219,7 +219,7 @@
 .btn-settings:hover,
 .btn-help:hover {
     background: #e9ecef;
-    color: #495057;
+    color: #ffffff;
 }
 
 .chat-item {
@@ -257,7 +257,7 @@
 .btn-delete {
     background: none;
     border: none;
-    color: #dc3545;
+    color: #F44336;
     padding: 4px;
     border-radius: 4px;
     cursor: pointer;
@@ -286,7 +286,7 @@
 .empty-history {
     text-align: center;
     padding: 40px 20px;
-    color: #6c757d;
+    color: #cccccc;
 }
 
 .empty-history i {
@@ -316,7 +316,7 @@
 .btn-toggle-preview {
     background: none;
     border: none;
-    color: #6c757d;
+    color: #cccccc;
     padding: 8px;
     border-radius: 6px;
     cursor: pointer;
@@ -328,12 +328,12 @@
 .btn-settings:hover,
 .btn-toggle-preview:hover {
     background: #f8f9fa;
-    color: #495057;
+    color: #ffffff;
 }
 
 .btn-toggle-preview.active {
     background: #e3f2fd;
-    color: #2196f3;
+    color: #00d4ff;
 }
 
 /* 主内容区域 */
@@ -351,14 +351,14 @@
 .loading-spinner {
     text-align: center;
     padding: 40px;
-    color: #6c757d;
+    color: #cccccc;
 }
 
 .loading-spinner i {
     font-size: 2rem;
     margin-bottom: 10px;
     display: block;
-    color: #2196f3;
+    color: #00d4ff;
 }
 
 .panel-controls {
@@ -373,7 +373,7 @@
     border-radius: 6px;
     padding: 8px 12px;
     cursor: pointer;
-    color: #666;
+    color: #cccccc;
     transition: all 0.2s;
 }
 

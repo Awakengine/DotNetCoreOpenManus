@@ -95,14 +95,14 @@
 
 .file-info h6 {
     margin: 0 0 8px 0;
-    color: #495057;
+    color: #ffffff;
     font-size: 16px;
     font-weight: 600;
 }
 
 .file-path {
     margin: 0;
-    color: #6c757d;
+    color: #cccccc;
     font-size: 12px;
     font-family: 'Courier New', monospace;
     word-break: break-all;
@@ -128,27 +128,27 @@
 .file-content code {
     background: none;
     padding: 0;
-    color: #495057;
+    color: #ffffff;
     font-family: 'Courier New', monospace;
 }
 
 .loading-spinner {
     text-align: center;
     padding: 60px 20px;
-    color: #6c757d;
+    color: #cccccc;
 }
 
 .loading-spinner i {
     font-size: 2rem;
     margin-bottom: 15px;
     display: block;
-    color: #2196f3;
+    color: #00d4ff;
 }
 
 .no-file-selected {
     text-align: center;
     padding: 80px 40px;
-    color: #6c757d;
+    color: #cccccc;
 }
 
 .no-file-selected i {
@@ -284,7 +284,7 @@
 .empty-history {
     text-align: center;
     padding: 40px 20px;
-    color: #666;
+    color: #cccccc;
 }
 
 .empty-history i {
