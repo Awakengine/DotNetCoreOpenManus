@@ -95,14 +95,14 @@
 			var allSessions = await ChatHistoryService.GetAllSessionsAsync();
 
 			chatSessions = allSessions.Select(kvp => new ChatSessionInfo
-			{
-				Id = kvp.Key,
-				Title = kvp.Value.Messages?.FirstOrDefault(m => m.Role == "user")?.Content?.Substring(0, Math.Min(30,
-			kvp.Value.Messages.FirstOrDefault(m => m.Role == "user")?.Content?.Length ?? 0)) + "..." ?? "新对话",
-				LastActivity = kvp.Value.Messages?.LastOrDefault()?.Timestamp ?? DateTime.Now,
-				MessageCount = kvp.Value.Messages?.Count(m => m.Role != "system") ?? 0,
-				CreatedAt = kvp.Value.Messages?.FirstOrDefault()?.Timestamp ?? DateTime.Now
-			}).OrderByDescending(s => s.LastActivity).ToList();
+				{
+					Id = kvp.Key,
+					Title = kvp.Value.Messages?.FirstOrDefault(m => m.Role == "user")?.Content?.Substring(0, Math.Min(30,
+				kvp.Value.Messages.FirstOrDefault(m => m.Role == "user")?.Content?.Length ?? 0)) + "..." ?? "新对话",
+					LastActivity = kvp.Value.Messages?.LastOrDefault()?.Timestamp ?? DateTime.Now,
+					MessageCount = kvp.Value.Messages?.Count(m => m.Role != "system") ?? 0,
+					CreatedAt = kvp.Value.Messages?.FirstOrDefault()?.Timestamp ?? DateTime.Now
+				}).OrderByDescending(s => s.LastActivity).ToList();
 
 			// 如果没有会话，创建一个默认会话
 			if (!chatSessions.Any())

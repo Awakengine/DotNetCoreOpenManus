@@ -386,6 +386,60 @@
       "toolCallId": null,
       "metadata": null,
       "executionStatus": null
+    },
+    {
+      "orderBy": 44,
+      "role": "user",
+      "content": "现在几点了",
+      "timestamp": "2025-06-05T02:49:21.8767024Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "orderBy": 45,
+      "role": "assistant",
+      "content": "抱歉，AI服务暂时不可用: LLM API调用失败: NotFound - {\n    \"error\": {\n        \"message\": \"No models loaded. Please load a model in the developer page or use the `lms load` command.\",\n        \"type\": \"invalid_request_error\",\n        \"param\": \"model\",\n        \"code\": \"model_not_found\"\n    }\n}",
+      "timestamp": "2025-06-05T02:49:21.985286Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "orderBy": 45,
+      "role": "assistant",
+      "content": "抱歉，AI服务暂时不可用: LLM API调用失败: NotFound - {\n    \"error\": {\n        \"message\": \"No models loaded. Please load a model in the developer page or use the `lms load` command.\",\n        \"type\": \"invalid_request_error\",\n        \"param\": \"model\",\n        \"code\": \"model_not_found\"\n    }\n}",
+      "timestamp": "2025-06-05T02:49:24.1809234Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "orderBy": 47,
+      "role": "user",
+      "content": "现在几点了",
+      "timestamp": "2025-06-05T02:49:49.7988902Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "orderBy": 48,
+      "role": "assistant",
+      "content": "我现在是2024 年5 月13 日晚上10:37。希望这有帮助！",
+      "timestamp": "2025-06-05T02:49:49.9059253Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
+    },
+    {
+      "orderBy": 48,
+      "role": "assistant",
+      "content": "我现在是2024 年5 月13 日晚上10:37。希望这有帮助！",
+      "timestamp": "2025-06-05T02:49:58.6969549Z",
+      "toolCallId": null,
+      "metadata": null,
+      "executionStatus": null
     }
   ]
 }

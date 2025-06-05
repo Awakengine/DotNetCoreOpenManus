@@ -7,137 +7,137 @@
 @inject IJSRuntime JSRuntime
 
 <div class="agent-input-area-fixed"
-    style="position:relative;background:#1e1e1e;border-top:1px solid #333;">
-    <!-- 输入框上方的控制按钮 -->
-    <div class="input-controls" style="padding:8px 12px;border-bottom:1px solid #333;">
-        @if (!IsFilePreviewVisible)
-        {
-            <button class="btn btn-outline-light btn-sm" title="文件预览" @onclick="OnOpenFilePreview">
-                <i class="fas fa-expand"></i> 文件预览
-            </button>
-        }
-    </div>
+	 style="position:relative;background:#1e1e1e;border-top:1px solid #333;">
+	<!-- 输入框上方的控制按钮 -->
+	<div class="input-controls" style="padding:8px 12px;border-bottom:1px solid #333;">
+		@if (!IsFilePreviewVisible)
+		{
+			<button class="btn btn-outline-light btn-sm" title="文件预览" @onclick="OnOpenFilePreview">
+				<i class="fas fa-expand"></i> 文件预览
+			</button>
+		}
+	</div>
 
-    <textarea class="form-control" placeholder="输入您的消息...（Shift+Enter 换行）" 
-        @bind-value="CurrentMessage" @bind-value:event="oninput" @bind-value:after="OnCurrentMessageChanged"
-        @onkeydown="@(e => HandleKeyPress(e))" disabled="@IsProcessing" rows="6" @ref="textareaRef"></textarea>
-    <div class="input-group align-items-end">
-        <label class="btn btn-outline-secondary mb-0 me-2">
-            <i class="fas fa-paperclip"></i>
-            <InputFile OnChange="OnFileSelected" multiple style="display:none" @ref="fileInputRef" />
-        </label>
-        <button class="btn btn-primary" @onclick="OnExecuteTask"
-            disabled="@(IsProcessing || string.IsNullOrWhiteSpace(CurrentMessage))">
-            @if (IsProcessing)
-            {
-                <i class="fas fa-spinner fa-spin"></i>
-            }
-            else
-            {
-                <i class="fas fa-paper-plane"></i>
-            }
-            执行任务
-        </button>
-    </div>
-    @if (SelectedFiles?.Count > 0)
-    {
-        <div class="mt-2">
-            <span>已选择附件：</span>
-            @foreach (var file in SelectedFiles)
-            {
-                <span class="badge bg-secondary me-1">@file.Name</span>
-            }
-        </div>
-    }
+	<textarea class="form-control" placeholder="输入您的消息...（Shift+Enter 换行）"
+			  @bind-value="CurrentMessage" @bind-value:event="oninput" @bind-value:after="OnCurrentMessageChanged"
+			  @onkeydown="@(e => HandleKeyPress(e))" disabled="@IsProcessing" rows="6" @ref="textareaRef"></textarea>
+	<div class="input-group align-items-end">
+		<label class="btn btn-outline-secondary mb-0 me-2">
+			<i class="fas fa-paperclip"></i>
+			<InputFile OnChange="OnFileSelected" multiple style="display:none" @ref="fileInputRef" />
+		</label>
+		<button class="btn btn-primary" @onclick="OnExecuteTask"
+				disabled="@(IsProcessing || string.IsNullOrWhiteSpace(CurrentMessage))">
+			@if (IsProcessing)
+			{
+				<i class="fas fa-spinner fa-spin"></i>
+			}
+			else
+			{
+				<i class="fas fa-paper-plane"></i>
+			}
+			执行任务
+		</button>
+	</div>
+	@if (SelectedFiles?.Count > 0)
+	{
+		<div class="mt-2">
+			<span>已选择附件：</span>
+			@foreach (var file in SelectedFiles)
+			{
+				<span class="badge bg-secondary me-1">@file.Name</span>
+			}
+		</div>
+	}
 </div>
 
 @code {
-    /// <summary>
-    /// 当前输入的消息内容
-    /// </summary>
-    [Parameter] public string CurrentMessage { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// 当前消息内容变化时的回调事件
-    /// </summary>
-    [Parameter] public EventCallback<string> CurrentMessageChanged { get; set; }
-    
-    /// <summary>
-    /// 是否正在处理任务的状态标识
-    /// </summary>
-    [Parameter] public bool IsProcessing { get; set; }
-    
-    /// <summary>
-    /// 文件预览是否可见的状态标识
-    /// </summary>
-    [Parameter] public bool IsFilePreviewVisible { get; set; }
-    
-    /// <summary>
-    /// 已选择的文件列表
-    /// </summary>
-    [Parameter] public List<IBrowserFile>? SelectedFiles { get; set; }
-    
-    /// <summary>
-    /// 执行任务时的回调事件
-    /// </summary>
-    [Parameter] public EventCallback OnExecuteTask { get; set; }
-    
-    /// <summary>
-    /// 打开文件预览时的回调事件
-    /// </summary>
-    [Parameter] public EventCallback OnOpenFilePreview { get; set; }
-    
-    /// <summary>
-    /// 文件选择时的回调事件
-    /// </summary>
-    [Parameter] public EventCallback<InputFileChangeEventArgs> OnFileSelected { get; set; }
-    
-    /// <summary>
-    /// 按键事件的回调
-    /// </summary>
-    [Parameter] public EventCallback<KeyboardEventArgs> OnKeyPress { get; set; }
+	/// <summary>
+	/// 当前输入的消息内容
+	/// </summary>
+	[Parameter] public string CurrentMessage { get; set; } = string.Empty;
 
-    /// <summary>
-    /// 文本输入框的元素引用
-    /// </summary>
-    private ElementReference textareaRef;
-    
-    /// <summary>
-    /// 文件输入控件的引用
-    /// </summary>
-    private InputFile? fileInputRef;
+	/// <summary>
+	/// 当前消息内容变化时的回调事件
+	/// </summary>
+	[Parameter] public EventCallback<string> CurrentMessageChanged { get; set; }
 
-    /// <summary>
-    /// 处理当前消息变化后的回调
-    /// </summary>
-    /// <returns>异步任务</returns>
-    private async Task OnCurrentMessageChanged()
-    {
-        await CurrentMessageChanged.InvokeAsync(CurrentMessage);
-    }
+	/// <summary>
+	/// 是否正在处理任务的状态标识
+	/// </summary>
+	[Parameter] public bool IsProcessing { get; set; }
 
-    /// <summary>
-    /// 处理键盘按键事件
-    /// </summary>
-    /// <param name="e">键盘事件参数</param>
-    /// <returns>异步任务</returns>
-    private async Task HandleKeyPress(KeyboardEventArgs e)
-    {
-        // Shift+Enter 换行，Enter 发送
-        if (e.Key == "Enter" && e.ShiftKey)
-        {
-            await Task.Delay(10); // 等待内容更新
-            await JSRuntime.InvokeVoidAsync("autoResizeTextarea", textareaRef);
-        }
-        else if (e.Key == "Enter" && !e.ShiftKey && !IsProcessing)
-        {
-            await OnExecuteTask.InvokeAsync();
-        }
+	/// <summary>
+	/// 文件预览是否可见的状态标识
+	/// </summary>
+	[Parameter] public bool IsFilePreviewVisible { get; set; }
 
-        // 调用父组件的按键处理
-        // if (OnKeyPress.HasDelegate)
-        // {
-        //     await OnKeyPress.InvokeAsync(e);
-        // }
-    }
+	/// <summary>
+	/// 已选择的文件列表
+	/// </summary>
+	[Parameter] public List<IBrowserFile>? SelectedFiles { get; set; }
+
+	/// <summary>
+	/// 执行任务时的回调事件
+	/// </summary>
+	[Parameter] public EventCallback OnExecuteTask { get; set; }
+
+	/// <summary>
+	/// 打开文件预览时的回调事件
+	/// </summary>
+	[Parameter] public EventCallback OnOpenFilePreview { get; set; }
+
+	/// <summary>
+	/// 文件选择时的回调事件
+	/// </summary>
+	[Parameter] public EventCallback<InputFileChangeEventArgs> OnFileSelected { get; set; }
+
+	/// <summary>
+	/// 按键事件的回调
+	/// </summary>
+	[Parameter] public EventCallback<KeyboardEventArgs> OnKeyPress { get; set; }
+
+	/// <summary>
+	/// 文本输入框的元素引用
+	/// </summary>
+	private ElementReference textareaRef;
+
+	/// <summary>
+	/// 文件输入控件的引用
+	/// </summary>
+	private InputFile? fileInputRef;
+
+	/// <summary>
+	/// 处理当前消息变化后的回调
+	/// </summary>
+	/// <returns>异步任务</returns>
+	private async Task OnCurrentMessageChanged()
+	{
+		await CurrentMessageChanged.InvokeAsync(CurrentMessage);
+	}
+
+	/// <summary>
+	/// 处理键盘按键事件
+	/// </summary>
+	/// <param name="e">键盘事件参数</param>
+	/// <returns>异步任务</returns>
+	private async Task HandleKeyPress(KeyboardEventArgs e)
+	{
+		// Shift+Enter 换行，Enter 发送
+		if (e.Key == "Enter" && e.ShiftKey)
+		{
+			await Task.Delay(10); // 等待内容更新
+			await JSRuntime.InvokeVoidAsync("autoResizeTextarea", textareaRef);
+		}
+		else if (e.Key == "Enter" && !e.ShiftKey && !IsProcessing)
+		{
+			await OnExecuteTask.InvokeAsync();
+		}
+
+		// 调用父组件的按键处理
+		// if (OnKeyPress.HasDelegate)
+		// {
+		//     await OnKeyPress.InvokeAsync(e);
+		// }
+	}
 }

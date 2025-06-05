@@ -14,9 +14,9 @@
 <PageTitle>OpenManus Agent</PageTitle>
 <div class="agent-content" style="display:flex;flex-direction:column;height:calc(100vh - 56px);position:relative;">
 	<!-- 主内容区域 -->
-	<div class="main-chat-area" style="flex:1;display:flex;flex-direction:column;position:relative;transition:margin-right 0.3s ease;@(isFilePreviewModalVisible ? "margin-right:400px;" : "")">
+	<div class="main-chat-area" style="@(isFilePreviewModalVisible ? "margin-right:400px;" : "")">
 		<!-- 消息显示区域 -->
-		<div class="messages-container" style="verflow-y:auto;flex-shrink:0;">
+		<div class="messages-container" style="overflow-y:auto;flex-shrink:0;">
 			@if (agentMemory == null || !agentMemory.Messages.Any())
 			{
 				<div class="welcome-message">
@@ -41,7 +41,7 @@
 					提供与AI代理的对话功能、文件预览、任务执行状态显示
 					支持多会话管理、实时消息流、工具调用结果展示和文件操作
 				*@
-				@* 内容流式输出展示区，实时滚动定位到底部 *@
+				<!-- 内容流式输出展示区，实时滚动定位到底部 -->
 				<div class="agent-messages" id="agentMessages">
 					@foreach (var message in agentMemory.Messages.Where(m => m.Role != "system"))
 					{
@@ -72,32 +72,33 @@
 									else
 									{
 										@((MarkupString)FormatMessageContent(message.Content))
-											@if (message.Role == "assistant" && ContainsFileReference(message.Content))
-											{
-												<div class="file-actions">
-													@foreach (var fileRef in ExtractFileReferences(message.Content))
-													{
-														<button class="btn btn-sm btn-outline-primary file-preview-btn"
-																@onclick="() => ShowFilePreview(fileRef.Name, fileRef.Path)">
-															<i class="fas fa-eye"></i> 预览 @fileRef.Name
-														</button>
-													}
-												</div>
-											}
+										@if (message.Role == "assistant" && ContainsFileReference(message.Content))
+										{
+											<div class="file-actions">
+												@foreach (var fileRef in ExtractFileReferences(message.Content))
+												{
+													<button class="btn btn-sm btn-outline-primary file-preview-btn"
+															@onclick="() => ShowFilePreview(fileRef.Name, fileRef.Path)">
+														<i class="fas fa-eye"></i> 预览 @fileRef.Name
+													</button>
+												}
+											</div>
+										}
 									}
 								</div>
 								<div class="message-time">@message.Timestamp.ToString("HH:mm:ss")</div>
 							</div>
 						</div>
-						}
-</div>
+					}
+				</div>
 			}
+
 		</div>
 
 		@* 底部输入区域容器 *@
-		<div id="bottom-area" style="position: absolute; bottom: 54px;margin-top: 240px; left: 0; right: 0; z-index: 999;">
+		<div id="bottom-area" style="position: absolute; bottom: 10px;margin-top: 240px; left: 0; right: 0; z-index: 999;">
 			@* 任务执行状态组件 *@
-			<ExecutionStatusDock ExecutionResult="@currentExecution" Messages="@agentMemory?.Messages"/>
+			<ExecutionStatusDock ExecutionResult="@currentExecution" Messages="@agentMemory?.Messages" />
 			<!-- 输入框区域 -->
 			<AgentInputArea CurrentMessage="@currentMessage"
 							CurrentMessageChanged="@(value => { currentMessage = value; StateHasChanged(); })"
@@ -114,7 +115,7 @@
 	<!-- 右侧文件预览面板 -->
 	@if (isFilePreviewModalVisible)
 	{
-		<div class="file-preview-sidebar" style="position:fixed;top:0;right:0;width:400px;height:100vh;background:#1e1e1e;border-left:1px solid #333;z-index:1001;transform:translateX(@(isFilePreviewModalVisible ? "0" : "100%"));transition:transform 0.3s ease;">
+		<div class="file-preview-sidebar" style="transform:translateX(@(isFilePreviewModalVisible ? "0" : "100%"));">
 			<div class="sidebar-header" style="padding:15px;border-bottom:1px solid #333;display:flex;justify-content:space-between;align-items:center;">
 				<h5 class="mb-0 text-light">
 					<i class="fas fa-file-alt"></i> 文件预览
@@ -159,39 +160,28 @@
 </div>
 
 <style>
-	.chat-session-item {
+	.main-chat-area {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
 		position: relative;
+		transition: margin-right 0.3s ease;
+		max-width: 900px;
 	}
 
-	.chat-session-item:hover {
-		background: #3a3a3a !important;
-		border-color: #555 !important;
-	}
-
-	.chat-session-item:hover .session-delete-btn {
-		opacity: 1 !important;
-	}
-
-	.chat-session-item.active:hover {
-		background: #3d6bb3 !important;
-		border-color: #5aa3f0 !important;
-	}
-
-	.session-delete-btn:hover {
-		background-color: #dc3545 !important;
-		color: white !important;
-	}
-
-	.chat-history-sidebar {
-		min-width: 300px;
-		max-width: 300px;
-	}
-
-	@@media (max-width: 768px) {
-		.chat-history-sidebar {
-			min-width: 250px;
-			max-width: 250px;
-		}
+	.file-preview-sidebar {
+		position: fixed;
+		top: 0;
+		right: 0;
+		width: calc(100vw - var(--main-chat-area-width,1230px));
+		height: calc(100vh - 95px);
+		background: #1e1e1e;
+		border-left: 1px solid #333;
+		z-index: 1001;
+		transition: transform 0.3s ease;
+		padding: 20px 20px 0px 0px;
+		margin: 64px 10px 10px 0px;
+		border-radius: 5px;
 	}
 </style>
 
@@ -352,7 +342,7 @@
 
 		// 加载会话记忆
 		await LoadSessionMemoryAsync();
-		
+
 		// 强制触发UI更新以显示加载的数据
 		await InvokeAsync(StateHasChanged);
 	}
@@ -386,28 +376,28 @@
 		try
 		{
 			Console.WriteLine($"=== OnParametersSetAsync 被调用 ===\nSessionId: '{SessionId}'\ncurrentSessionId: '{currentSessionId}'\n时间: {DateTime.Now}");
-			
+
 			// 如果SessionId为空，使用默认值
 			var targetSessionId = string.IsNullOrEmpty(SessionId) ? "default-session" : SessionId;
-			
+
 			Console.WriteLine($"目标会话ID: '{targetSessionId}'");
-			
+
 			// 检查是否需要切换会话
 			if (targetSessionId != currentSessionId)
 			{
 				Console.WriteLine($"会话ID发生变化，从 '{currentSessionId}' 切换到 '{targetSessionId}'");
-				
+
 				var previousSessionId = currentSessionId;
 				currentSessionId = targetSessionId;
-				
+
 				Console.WriteLine("开始加载新会话数据...");
 				await LoadSessionMemoryAsync();
-				
+
 				Console.WriteLine($"会话数据加载完成，消息数量: {agentMemory?.Messages?.Count ?? 0}");
-				
+
 				// 强制触发UI重新渲染以显示新会话的历史数据
 				await InvokeAsync(StateHasChanged);
-				
+
 				Console.WriteLine("UI状态已更新");
 			}
 			else
@@ -440,11 +430,11 @@
 		{
 			// 创建执行状态
 			currentExecution = new AgentExecutionResult
-			{
-				SessionId = currentSessionId,
-				Steps = new List<string> { "正在处理用户请求..." },
-				IsCompleted = false
-			};
+				{
+					SessionId = currentSessionId,
+					Steps = new List<string> { "正在处理用户请求..." },
+					IsCompleted = false
+				};
 			await InvokeAsync(StateHasChanged);
 			// 更新底部区域高度
 			await JSRuntime.InvokeVoidAsync("updateBottomAreaHeight");
@@ -462,14 +452,14 @@
 
 			// 添加用户消息并实时保存
 			var userMsg = new AgentMessage
-			{
-				OrderBy = tempAgentMemory.Messages.Count + 1,
-				Role = "user",
-				Content = userMessage,
-				Timestamp = DateTime.UtcNow
-			};
+				{
+					OrderBy = tempAgentMemory.Messages.Count + 1,
+					Role = "user",
+					Content = userMessage,
+					Timestamp = DateTime.UtcNow
+				};
 			// 只保存到持久化存储，内存会在下次加载时同步，并返回
-		    tempAgentMemory = await ChatHistoryService.AddMessageAsync(currentSessionId, userMsg);
+			tempAgentMemory = await ChatHistoryService.AddMessageAsync(currentSessionId, userMsg);
 			currentExecution.Steps.Add("用户消息已添加到会话记忆并保存");
 			await InvokeAsync(StateHasChanged);
 
@@ -486,14 +476,14 @@
 
 			// 添加一个空的助手消息用于流式显示
 			var assistantMessage = new AgentMessage
-			{
-				OrderBy = tempAgentMemory.Messages.Count + 1,
-				Role = "assistant",
-				Content = "",
-				Timestamp = DateTime.UtcNow
-			};
+				{
+					OrderBy = tempAgentMemory.Messages.Count + 1,
+					Role = "assistant",
+					Content = "",
+					Timestamp = DateTime.UtcNow
+				};
 			// 先添加到内存用于流式显示
-			
+
 			// 强制UI更新以显示空的助手消息
 			await InvokeAsync(StateHasChanged);
 			await Task.Delay(100);
@@ -520,14 +510,14 @@
 			// 更新最终的消息内容
 			assistantMessage.Content = response.Content;
 			tempAgentMemory = await ChatHistoryService.AddMessageAsync(currentSessionId, assistantMessage);
-			
+
 			// 如果有使用情况统计，可以保存到消息的元数据中
 			if (usage != null)
 			{
 				assistantMessage.Metadata = new Dictionary<string, object>
-				{
-					["usage"] = usage
-				};
+					{
+						["usage"] = usage
+					};
 			}
 
 			// 保存助手消息到聊天历史服务（只保存一次）
@@ -555,19 +545,19 @@
 		{
 			// 添加错误消息到内存和持久化存储
 			var errorMessage = new AgentMessage
-			{
-				OrderBy = tempAgentMemory.Messages.Count + 1,
-				Role = "assistant",
-				Content = $"执行任务时发生错误: {ex.Message}",
-				Timestamp = DateTime.UtcNow
-			};
-			
+				{
+					OrderBy = tempAgentMemory.Messages.Count + 1,
+					Role = "assistant",
+					Content = $"执行任务时发生错误: {ex.Message}",
+					Timestamp = DateTime.UtcNow
+				};
+
 			if (tempAgentMemory != null)
 			{
 				// 只保存到持久化存储，同时添加到当前内存
 				tempAgentMemory = await ChatHistoryService.AddMessageAsync(currentSessionId, errorMessage);
 			}
-			
+
 			// 更新执行状态为错误
 			if (currentExecution != null)
 			{
@@ -575,7 +565,7 @@
 				currentExecution.IsCompleted = true;
 				currentExecution.Error = ex.Message;
 			}
-			
+
 			await InvokeAsync(StateHasChanged);
 			await Task.Delay(100);
 			await JSRuntime.InvokeVoidAsync("smoothScrollToBottom", "agentMessages");
@@ -583,14 +573,14 @@
 		finally
 		{
 			isProcessing = false;
-			
+
 			// 确保执行状态最终被标记为完成
 			if (currentExecution != null && !currentExecution.IsCompleted)
 			{
 				currentExecution.IsCompleted = true;
 				currentExecution.Steps.Add("任务执行结束");
 			}
-			
+
 			await InvokeAsync(StateHasChanged);
 			agentMemory = tempAgentMemory;
 		}
@@ -618,7 +608,7 @@
 	{
 		// 清空聊天历史服务中的会话数据
 		await ChatHistoryService.ClearSessionAsync(currentSessionId);
-		
+
 		// 清空AgentService中的会话
 		AgentService.ClearSession(currentSessionId);
 		agentMemory = AgentService.GetSession(currentSessionId);
@@ -694,16 +684,16 @@
 					// 如果聊天历史服务中没有，则从AgentService获取
 					agentMemory = AgentService.GetSession(currentSessionId);
 				}
-				
+
 				// 确保agentMemory不为null
 				if (agentMemory == null)
 				{
 					agentMemory = new AgentMemory();
 				}
-				
+
 				sessionMemories[currentSessionId] = agentMemory;
 			}
-			
+
 			// 记录加载的消息数量用于调试
 			Console.WriteLine($"LoadSessionMemoryAsync: 会话 {currentSessionId} 加载了 {agentMemory?.Messages?.Count ?? 0} 条消息");
 		}

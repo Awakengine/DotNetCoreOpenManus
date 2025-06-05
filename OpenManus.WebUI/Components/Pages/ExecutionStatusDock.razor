@@ -12,7 +12,7 @@
 	<div class="execution-dock" @ref="executionDockRef">
 		<div class="execution-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: @(isCollapsed ? "0" : "10px"); cursor: pointer;" @onclick="ToggleCollapse">
 			<h6 style="color: white; margin: 0; font-weight: 600; font-size: 14px;">
-				@if (ExecutionResult?.IsCompleted == true || (ExecutionResult == null && Messages!= null && Messages.Count > 0))
+				@if (ExecutionResult?.IsCompleted == true || (ExecutionResult == null && Messages != null && Messages.Count > 0))
 				{
 					<i class="fas fa-check-circle" style="color: #4CAF50;"></i>
 				}
@@ -169,7 +169,7 @@
 	/// <summary>
 	/// 是否显示组件（永久停靠模式）
 	/// </summary>
-	public bool IsVisible => ExecutionResult != null || hasEverExecuted|| (Messages!= null && Messages.Count > 0);
+	public bool IsVisible => ExecutionResult != null || hasEverExecuted || (Messages != null && Messages.Count > 0);
 
 	/// <summary>
 	/// 是否曾经执行过任务

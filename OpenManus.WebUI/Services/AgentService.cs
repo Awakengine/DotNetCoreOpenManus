@@ -70,7 +70,7 @@ public class AgentService
     public async Task<AgentExecutionResult> ExecuteTaskAsync(string sessionId, string userMessage, int maxSteps = 2)
     {
         var memory = GetOrCreateSession(sessionId);
-        memory.AddMessage("user", userMessage);
+        memory.AddMessage(memory.Messages.Count + 1, "user", userMessage);
 
         var result = new AgentExecutionResult
         {
@@ -101,7 +101,7 @@ public class AgentService
                     foreach (var toolCall in stepResult.ToolCalls)
                     {
                         var toolResult = await ExecuteToolAsync(toolCall);
-                        memory.AddMessage("tool", toolResult.Content, toolCall.Id);
+                        memory.AddMessage(memory.Messages.Count + 1, "tool", toolResult.Content, toolCall.Id);
                         result.Steps.Add($"Tool {toolCall.Name}: {toolResult.Content}");
                     }
 
@@ -152,7 +152,7 @@ public class AgentService
         // 调用真实的LLM API
         var (response, usage) = await SimulateAIResponseAsync(memory, stepNumber);
 
-        memory.AddMessage("assistant", response.Content);
+        memory.AddMessage(memory.Messages.Count + 1, "assistant", response.Content);
         return (response, usage);
     }
 

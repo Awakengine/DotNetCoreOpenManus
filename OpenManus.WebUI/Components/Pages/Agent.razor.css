@@ -196,6 +196,41 @@
     background: linear-gradient(45deg, #45a049, #4CAF50);
 }
 
+.chat-session-item {
+    position: relative;
+}
+
+    .chat-session-item:hover {
+        background: #3a3a3a !important;
+        border-color: #555 !important;
+    }
+
+        .chat-session-item:hover .session-delete-btn {
+            opacity: 1 !important;
+        }
+
+    .chat-session-item.active:hover {
+        background: #3d6bb3 !important;
+        border-color: #5aa3f0 !important;
+    }
+
+.session-delete-btn:hover {
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+
+.chat-history-sidebar {
+    min-width: 300px;
+    max-width: 300px;
+}
+
+@@media (max-width: 768px) {
+    .chat-history-sidebar {
+        min-width: 250px;
+        max-width: 250px;
+    }
+}
+
 /* 对话历史区域 */
 .chat-history {
     flex: 1;
