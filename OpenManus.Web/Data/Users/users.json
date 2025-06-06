@@ -53,6 +53,25 @@
     }
   },
   {
+    "id": "1e240bba-70bb-41e1-9967-43d91381fd37",
+    "name": "游客_06062025",
+    "type": 0,
+    "avatar": "fas fa-user-secret",
+    "status": "在线",
+    "createdAt": "2025-06-06T12:25:32.911356Z",
+    "lastActivity": "2025-06-06T12:25:32.911356Z",
+    "sessionIds": [
+      "accfdf91-05d1-439f-8027-d28dd8c58cd5"
+    ],
+    "settings": {
+      "theme": "light",
+      "language": "zh-CN",
+      "enableNotifications": true,
+      "autoSaveInterval": 30,
+      "maxSessions": 50
+    }
+  },
+  {
     "id": "4ede9a13-4bc8-4187-b04f-2ecad57e8109",
     "name": "游客_06061814",
     "type": 0,
@@ -581,6 +600,25 @@
     "createdAt": "2025-06-06T10:14:00.8966512Z",
     "lastActivity": "2025-06-06T10:14:00.8966512Z",
     "sessionIds": [],
+    "settings": {
+      "theme": "light",
+      "language": "zh-CN",
+      "enableNotifications": true,
+      "autoSaveInterval": 30,
+      "maxSessions": 50
+    }
+  },
+  {
+    "id": "19d02f23-19ab-4fd1-9a72-adf316d0ca88",
+    "name": "游客_06062024",
+    "type": 0,
+    "avatar": "fas fa-user-secret",
+    "status": "在线",
+    "createdAt": "2025-06-06T12:24:50.350662Z",
+    "lastActivity": "2025-06-06T12:24:50.350662Z",
+    "sessionIds": [
+      "0dd6b6b8-6cef-48d2-ba49-a0ab16750e6b"
+    ],
     "settings": {
       "theme": "light",
       "language": "zh-CN",

@@ -24,7 +24,17 @@ namespace OpenManus.Web.Controllers
         /// <summary>
         /// 用户登录
         /// </summary>
+        /// <param name="request">登录请求，包含用户名和密码</param>
+        /// <returns>返回登录结果和JWT令牌</returns>
+        /// <response code="200">登录成功</response>
+        /// <response code="400">请求参数无效</response>
+        /// <response code="401">用户名或密码错误</response>
+        /// <response code="500">服务器内部错误</response>
         [HttpPost("login")]
+        [ProducesResponseType(typeof(LoginResponse), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(500)]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             try
@@ -110,7 +120,15 @@ namespace OpenManus.Web.Controllers
         /// <summary>
         /// 创建游客用户
         /// </summary>
+        /// <param name="request">游客用户创建请求，可选择指定用户名</param>
+        /// <returns>返回游客用户信息和JWT令牌</returns>
+        /// <response code="200">成功创建游客用户</response>
+        /// <response code="400">请求参数无效</response>
+        /// <response code="500">服务器内部错误</response>
         [HttpPost("guest")]
+        [ProducesResponseType(typeof(LoginResponse), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
         public async Task<IActionResult> CreateGuest([FromBody] GuestRequest? request = null)
         {
             try

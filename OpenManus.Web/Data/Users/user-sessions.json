@@ -8,6 +8,15 @@
       "isActive": true
     }
   ],
+  "1e240bba-70bb-41e1-9967-43d91381fd37": [
+    {
+      "userId": "1e240bba-70bb-41e1-9967-43d91381fd37",
+      "sessionId": "accfdf91-05d1-439f-8027-d28dd8c58cd5",
+      "createdAt": "2025-06-06T12:25:32.911801Z",
+      "lastAccessed": "2025-06-06T12:25:32.911801Z",
+      "isActive": true
+    }
+  ],
   "4ede9a13-4bc8-4187-b04f-2ecad57e8109": [
     {
       "userId": "4ede9a13-4bc8-4187-b04f-2ecad57e8109",
@@ -129,6 +138,15 @@
       "sessionId": "71d30655-18b5-49c0-815f-f1d8e277ee3c",
       "createdAt": "2025-06-06T11:58:47.586393Z",
       "lastAccessed": "2025-06-06T11:58:47.586393Z",
+      "isActive": true
+    }
+  ],
+  "19d02f23-19ab-4fd1-9a72-adf316d0ca88": [
+    {
+      "userId": "19d02f23-19ab-4fd1-9a72-adf316d0ca88",
+      "sessionId": "0dd6b6b8-6cef-48d2-ba49-a0ab16750e6b",
+      "createdAt": "2025-06-06T12:24:50.35449Z",
+      "lastAccessed": "2025-06-06T12:24:50.35449Z",
       "isActive": true
     }
   ],

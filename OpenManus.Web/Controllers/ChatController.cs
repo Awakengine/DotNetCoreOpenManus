@@ -25,7 +25,14 @@ namespace OpenManus.Web.Controllers
         /// <summary>
         /// 获取用户的所有聊天会话
         /// </summary>
+        /// <returns>返回用户的聊天会话列表</returns>
+        /// <response code="200">成功返回会话列表</response>
+        /// <response code="401">未授权访问</response>
+        /// <response code="500">服务器内部错误</response>
         [HttpGet("sessions")]
+        [ProducesResponseType(typeof(IEnumerable<ChatSessionInfo>), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(500)]
         public async Task<IActionResult> GetSessions()
         {
             try
@@ -49,7 +56,17 @@ namespace OpenManus.Web.Controllers
         /// <summary>
         /// 创建新的聊天会话
         /// </summary>
+        /// <param name="request">创建会话请求，包含会话标题</param>
+        /// <returns>返回创建的会话信息</returns>
+        /// <response code="200">成功创建会话</response>
+        /// <response code="400">请求参数无效</response>
+        /// <response code="401">未授权访问</response>
+        /// <response code="500">服务器内部错误</response>
         [HttpPost("sessions")]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(500)]
         public async Task<IActionResult> CreateSession([FromBody] CreateSessionRequest request)
         {
             try
@@ -179,10 +196,22 @@ namespace OpenManus.Web.Controllers
         }
 
         /// <summary>
-        /// 发送消息
+        /// 发送消息到指定会话
         /// </summary>
+        /// <param name="request">发送消息请求，包含会话ID和消息内容</param>
+        /// <returns>返回AI助手的回复</returns>
+        /// <response code="200">成功发送消息并返回AI回复</response>
+        /// <response code="400">请求参数无效</response>
+        /// <response code="401">用户未登录</response>
+        /// <response code="403">无权访问该会话</response>
+        /// <response code="500">服务器内部错误</response>
         [HttpPost("send")]
         [AllowAnonymous]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(500)]
         public async Task<IActionResult> SendMessage([FromBody] SendMessageRequest request)
         {
             try
