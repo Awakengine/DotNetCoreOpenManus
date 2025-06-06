@@ -1,0 +1,341 @@
+@model OpenManus.Web.Controllers.LoginViewModel
+@{
+    ViewData["Title"] = "用户管理";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - OpenManus</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .user-management-container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
+        
+        .user-management-card {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .logo-container {
+            margin-bottom: 20px;
+        }
+        
+        .logo-icon {
+            font-size: 3rem;
+            color: #667eea;
+        }
+        
+        .subtitle {
+            color: #6c757d;
+            margin-bottom: 30px;
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-outline-secondary {
+            border-radius: 10px;
+            padding: 12px;
+            font-weight: 600;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        
+        .text-danger {
+            font-size: 0.875em;
+        }
+        
+        .toggle-form {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .toggle-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .toggle-link:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+        
+        .btn-guest {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-guest:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="user-management-container">
+        <div class="user-management-card">
+            <div class="text-center mb-4">
+                <div class="logo-container">
+                    <i class="fas fa-robot logo-icon"></i>
+                </div>
+                <h3 id="form-title">欢迎回来</h3>
+                <p class="subtitle" id="form-subtitle">登录到 OpenManus</p>
+            </div>
+
+            @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage as string))
+            {
+                <div class="alert alert-danger" role="alert">
+                    @ViewBag.ErrorMessage
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(ViewBag.SuccessMessage as string))
+            {
+                <div class="alert alert-success" role="alert">
+                    @ViewBag.SuccessMessage
+                </div>
+            }
+
+            <!-- 登录表单 -->
+            <form id="login-form" method="post" asp-action="Login">
+                <div class="mb-3">
+                    <div class="row align-items-center">
+                        <div class="col-4">
+                            <label for="Name" class="form-label mb-0">
+                                <i class="fas fa-user me-2"></i>用户名
+                            </label>
+                        </div>
+                        <div class="col-8">
+                            <input asp-for="Name" class="form-control" placeholder="输入您的用户名" />
+                        </div>
+                    </div>
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <div class="row align-items-center">
+                        <div class="col-4">
+                            <label for="Password" class="form-label mb-0">
+                                <i class="fas fa-lock me-2"></i>密码
+                            </label>
+                        </div>
+                        <div class="col-8">
+                            <input asp-for="Password" type="password" class="form-control" placeholder="输入您的密码" />
+                        </div>
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt me-2"></i>登录
+                    </button>
+                </div>
+            </form>
+
+            <!-- 注册表单 -->
+            <form id="register-form" method="post" asp-action="Register" style="display: none;">
+                <div class="mb-3">
+                    <div class="row align-items-center">
+                        <div class="col-4">
+                            <label class="form-label mb-0">
+                                <i class="fas fa-user me-2"></i>用户名
+                            </label>
+                        </div>
+                        <div class="col-8">
+                            <input name="Name" class="form-control" placeholder="输入用户名" required />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="row align-items-center">
+                        <div class="col-4">
+                            <label class="form-label mb-0">
+                                <i class="fas fa-envelope me-2"></i>邮箱
+                            </label>
+                        </div>
+                        <div class="col-8">
+                            <input name="Email" type="email" class="form-control" placeholder="输入邮箱地址" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="row align-items-center">
+                        <div class="col-4">
+                            <label class="form-label mb-0">
+                                <i class="fas fa-lock me-2"></i>密码
+                            </label>
+                        </div>
+                        <div class="col-8">
+                            <input id="register-password" name="Password" type="password" class="form-control" placeholder="输入密码" required minlength="6" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="row align-items-center">
+                        <div class="col-4">
+                            <label class="form-label mb-0">
+                                <i class="fas fa-lock me-2"></i>确认密码
+                            </label>
+                        </div>
+                        <div class="col-8">
+                            <input id="register-confirm-password" name="ConfirmPassword" type="password" class="form-control" placeholder="再次输入密码" required />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>注册
+                    </button>
+                </div>
+            </form>
+
+            <!-- 游客模式和注册按钮 -->
+            <div class="row mt-3">
+                <div class="col-6">
+                    <button class="btn btn-outline-secondary w-100" onclick="toggleForm()">
+                        <i class="fas fa-user-plus me-2"></i>
+                        <span id="toggle-button-text">立即注册</span>
+                    </button>
+                </div>
+                <div class="col-6">
+                    <form id="guest-form" method="post" asp-action="LoginAsGuest" style="display: inline;">
+                        <button type="submit" class="btn btn-guest w-100">
+                            <i class="fas fa-user-secret me-2"></i>
+                            游客模式
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="toggle-form">
+                <p id="toggle-text" style="display: none;">还没有账户？ <a href="#" class="toggle-link" onclick="toggleForm()">立即注册</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let isLoginForm = true;
+
+        function toggleForm() {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const formTitle = document.getElementById('form-title');
+            const formSubtitle = document.getElementById('form-subtitle');
+            const toggleText = document.getElementById('toggle-text');
+
+            if (isLoginForm) {
+                // 切换到注册表单
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+                formTitle.textContent = '创建账户';
+                formSubtitle.textContent = '注册 OpenManus 账户';
+                toggleText.innerHTML = '已有账户？ <a href="#" class="toggle-link" onclick="toggleForm()">立即登录</a>';
+                document.getElementById('toggle-button-text').textContent = '立即登录';
+                isLoginForm = false;
+            } else {
+                // 切换到登录表单
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+                formTitle.textContent = '欢迎回来';
+                formSubtitle.textContent = '登录到 OpenManus';
+                toggleText.innerHTML = '还没有账户？ <a href="#" class="toggle-link" onclick="toggleForm()">立即注册</a>';
+                document.getElementById('toggle-button-text').textContent = '立即注册';
+                isLoginForm = true;
+            }
+        }
+
+        // 密码确认验证
+        document.getElementById('register-confirm-password').addEventListener('input', function() {
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = this.value;
+            
+            if (password !== confirmPassword) {
+                this.setCustomValidity('密码不一致');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+        
+        // 密码输入时也要重新验证确认密码
+        document.getElementById('register-password').addEventListener('input', function() {
+            const confirmPasswordInput = document.getElementById('register-confirm-password');
+            const password = this.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            if (confirmPassword && password !== confirmPassword) {
+                confirmPasswordInput.setCustomValidity('密码不一致');
+            } else {
+                confirmPasswordInput.setCustomValidity('');
+            }
+        });
+    </script>
+</body>
+</html>

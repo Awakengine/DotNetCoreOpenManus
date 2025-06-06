@@ -155,4 +155,14 @@ public interface IUserService
     /// <param name="password">密码</param>
     /// <returns>用户信息，如果验证失败返回null</returns>
     Task<UserInfo?> ValidateUserLoginWithPasswordAsync(string username, string password);
+
+    /// <summary>
+    /// 验证用户登录并生成JWT令牌
+    /// </summary>
+    Task<(UserInfo? user, string? token)> LoginWithJwtAsync(string username, string password);
+
+    /// <summary>
+    /// 通过JWT令牌获取当前用户
+    /// </summary>
+    Task<UserInfo?> GetUserByJwtTokenAsync(string token);
 }

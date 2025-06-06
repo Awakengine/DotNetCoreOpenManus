@@ -4,6 +4,7 @@
 @using OpenManus.WebUI.Services
 @using System.ComponentModel.DataAnnotations
 @inject IUserService UserService
+@inject IJwtService JwtService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 
@@ -69,19 +70,20 @@
 			</div>
 		</EditForm>
 
-		<div class="text-center mt-3">
-			<button class="btn btn-link" @onclick="ShowRegisterModal">
-				<i class="fas fa-user-plus me-2"></i>
-				还没有账号？立即注册
-			</button>
-		</div>
-
-		<div class="text-center mt-2">
-			<button class="btn btn-guest" @onclick="LoginAsGuest">
-				<i class="fas fa-user-secret me-2"></i>游客模式
-				<span class="guest-subtitle">快速体验，无需注册</span>
-			</button>
+		<div class="row mt-3">
+			<div class="col-6">
+				<button class="btn btn-link w-100" @onclick="ShowRegisterModal">
+					<i class="fas fa-user-plus me-2"></i>
+					立即注册
+				</button>
 			</div>
+			<div class="col-6">
+				<button class="btn btn-guest w-100" @onclick="LoginAsGuest">
+					<i class="fas fa-user-secret me-2"></i>
+					游客模式
+				</button>
+			</div>
+		</div>
 	</div>
 </div>
 
@@ -237,15 +239,18 @@
 
 		try
 		{
-			// 登录逻辑 - 验证用户和密码
-			var existingUser = await UserService.ValidateUserLoginWithPasswordAsync(loginForm.Name, loginForm.Password);
+			// 使用JWT进行登录验证
+			var (user, token) = await UserService.LoginWithJwtAsync(loginForm.Name, loginForm.Password);
 
-			if (existingUser != null)
+			if (user != null && !string.IsNullOrEmpty(token))
 			{
+				// 将JWT令牌存储到localStorage
+				await JSRuntime.InvokeVoidAsync("localStorage.setItem", "jwt_token", token);
+				
 				// 设置当前用户
-				await UserService.SetCurrentUserIdAsync(existingUser.Id);
+				await UserService.SetCurrentUserIdAsync(user.Id);
 
-				successMessage = $"欢迎回来，{existingUser.Name}！";
+				successMessage = $"欢迎回来，{user.Name}！登录令牌已生成。";
 
 				// 延迟跳转到主页
 				await Task.Delay(1000);
@@ -306,10 +311,14 @@
 				// 创建新用户
 				var newUser = await UserService.CreateRegisteredUserWithPasswordAsync(registerForm.Name, registerForm.Password, registerForm.Avatar ?? string.Empty);
 
+				// 生成JWT令牌
+				var token = JwtService.GenerateToken(newUser);
+				await JSRuntime.InvokeVoidAsync("localStorage.setItem", "jwt_token", token);
+
 				// 设置当前用户
 				await UserService.SetCurrentUserIdAsync(newUser.Id);
 
-				registerSuccessMessage = $"注册成功！欢迎，{newUser.Name}！";
+				registerSuccessMessage = $"注册成功！欢迎，{newUser.Name}！登录令牌已生成。";
 
 				// 延迟后关闭模态框并跳转到主页
 				await Task.Delay(1500);

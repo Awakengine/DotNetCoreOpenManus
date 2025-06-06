@@ -1,0 +1,210 @@
+@model OpenManus.Web.Models.ChatSessionInfo
+@{
+    ViewData["Title"] = "OpenManus Agent";
+    Layout = "_Layout";
+}
+
+<div class="agent-content" style="display:flex;flex-direction:column;height:calc(100vh - 120px);position:relative;">
+    <!-- 主内容区域 -->
+    <div class="main-chat-area" style="flex: 1; display: flex; flex-direction: column;">
+        <!-- 消息显示区域 -->
+        <div class="messages-container" style="flex: 1; overflow-y: auto; padding: 20px; background: #f8f9fa;">
+            <div id="messages-list">
+                @if (Model?.Messages == null || !Model.Messages.Any())
+                {
+                    <div class="welcome-message text-center" style="margin-top: 50px;">
+                        <div class="welcome-content">
+                            <i class="fas fa-robot fa-3x text-primary mb-3"></i>
+                            <h5>欢迎使用 OpenManus AI Agent</h5>
+                            <p>我是一个多功能AI助手，可以帮助您：</p>
+                            <ul class="feature-list list-unstyled">
+                                <li><i class="fas fa-file me-2"></i> 文件操作和管理</li>
+                                <li><i class="fab fa-python me-2"></i> Python代码执行</li>
+                                <li><i class="fas fa-search me-2"></i> 信息搜索</li>
+                                <li><i class="fas fa-tasks me-2"></i> 复杂任务规划和执行</li>
+                            </ul>
+                            <p>请输入您的任务或问题，我将为您提供帮助。</p>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var message in Model.Messages.Where(m => m.Role != "system"))
+                    {
+                        <div class="message @(message.Role == "user" ? "user-message" : "assistant-message") mb-3">
+                            <div class="message-header">
+                                <strong>@(message.Role == "user" ? "您" : "AI助手")</strong>
+                                <small class="text-muted ms-2">@message.Timestamp.ToString("HH:mm")</small>
+                            </div>
+                            <div class="message-content mt-2">
+                                @Html.Raw(message.Content.Replace("\n", "<br>"))
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+        
+        <!-- 输入区域 -->
+        <div class="input-area" style="padding: 20px; background: white; border-top: 1px solid #dee2e6;">
+            <form id="chat-form" onsubmit="sendMessage(event)">
+                <div class="input-group">
+                    <textarea id="message-input" class="form-control" placeholder="输入您的消息..." rows="3" style="resize: none;"></textarea>
+                    <button type="submit" class="btn btn-primary" id="send-button">
+                        <i class="fas fa-paper-plane"></i> 发送
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 引入Font Awesome图标 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+.agent-content {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.welcome-message {
+    color: #6c757d;
+}
+
+.feature-list li {
+    margin: 10px 0;
+    color: #495057;
+}
+
+.user-message {
+    text-align: right;
+}
+
+.user-message .message-content {
+    background: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 18px 18px 5px 18px;
+    display: inline-block;
+    max-width: 70%;
+}
+
+.assistant-message .message-content {
+    background: white;
+    border: 1px solid #dee2e6;
+    padding: 10px 15px;
+    border-radius: 18px 18px 18px 5px;
+    display: inline-block;
+    max-width: 70%;
+}
+
+.message-header {
+    font-size: 0.9em;
+}
+
+.input-area {
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+}
+
+#message-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+</style>
+
+<script>
+let sessionId = '@ViewBag.SessionId';
+
+function sendMessage(event) {
+    event.preventDefault();
+    
+    const messageInput = document.getElementById('message-input');
+    const message = messageInput.value.trim();
+    
+    if (!message) return;
+    
+    // 添加用户消息到界面
+    addMessageToUI('user', message);
+    
+    // 清空输入框
+    messageInput.value = '';
+    
+    // 禁用发送按钮
+    const sendButton = document.getElementById('send-button');
+    sendButton.disabled = true;
+    sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 发送中...';
+    
+    // 发送消息到服务器
+    fetch('/api/chat/send', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            sessionId: sessionId,
+            message: message
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 添加AI回复到界面
+            addMessageToUI('assistant', data.response);
+        } else {
+            addMessageToUI('assistant', '抱歉，发生了错误：' + (data.error || '未知错误'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        addMessageToUI('assistant', '抱歉，网络连接出现问题，请稍后重试。');
+    })
+    .finally(() => {
+        // 恢复发送按钮
+        sendButton.disabled = false;
+        sendButton.innerHTML = '<i class="fas fa-paper-plane"></i> 发送';
+    });
+}
+
+function addMessageToUI(role, content) {
+    const messagesList = document.getElementById('messages-list');
+    const now = new Date();
+    const timeString = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${role === 'user' ? 'user-message' : 'assistant-message'} mb-3`;
+    
+    messageDiv.innerHTML = `
+        <div class="message-header">
+            <strong>${role === 'user' ? '您' : 'AI助手'}</strong>
+            <small class="text-muted ms-2">${timeString}</small>
+        </div>
+        <div class="message-content mt-2">
+            ${content.replace(/\n/g, '<br>')}
+        </div>
+    `;
+    
+    messagesList.appendChild(messageDiv);
+    
+    // 滚动到底部
+    const messagesContainer = document.querySelector('.messages-container');
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// 回车发送消息
+document.getElementById('message-input').addEventListener('keydown', function(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage(event);
+    }
+});
+</script>

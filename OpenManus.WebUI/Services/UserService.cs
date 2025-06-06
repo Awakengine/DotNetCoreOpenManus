@@ -48,6 +48,11 @@ public class UserService : IUserService
     private readonly SessionManagementService _sessionManagementService;
     
     /// <summary>
+    /// JWT服务
+    /// </summary>
+    private readonly IJwtService _jwtService;
+    
+    /// <summary>
     /// JSON序列化选项
     /// </summary>
     private readonly JsonSerializerOptions _jsonOptions = new()
@@ -61,9 +66,11 @@ public class UserService : IUserService
     /// 构造函数
     /// </summary>
     /// <param name="sessionManagementService">会话管理服务</param>
-    public UserService(SessionManagementService sessionManagementService)
+    /// <param name="jwtService">JWT服务</param>
+    public UserService(SessionManagementService sessionManagementService, IJwtService jwtService)
     {
         _sessionManagementService = sessionManagementService;
+        _jwtService = jwtService;
         _dataPath = Path.Combine(Directory.GetCurrentDirectory(), "Data", "Users");
         _usersFilePath = Path.Combine(_dataPath, "users.json");
         _userSessionsFilePath = Path.Combine(_dataPath, "user-sessions.json");
@@ -660,6 +667,33 @@ public class UserService : IUserService
                 await UpdateUserActivityAsync(user.Id);
                 return user;
             }
+        }
+        return null;
+     }
+
+    /// <summary>
+    /// 验证用户登录并生成JWT令牌
+    /// </summary>
+    public async Task<(UserInfo? user, string? token)> LoginWithJwtAsync(string username, string password)
+    {
+        var user = await ValidateUserLoginWithPasswordAsync(username, password);
+        if (user != null)
+        {
+            var token = _jwtService.GenerateToken(user);
+            return (user, token);
+        }
+        return (null, null);
+    }
+
+    /// <summary>
+    /// 通过JWT令牌获取当前用户
+    /// </summary>
+    public async Task<UserInfo?> GetUserByJwtTokenAsync(string token)
+    {
+        var userId = _jwtService.ValidateToken(token);
+        if (!string.IsNullOrEmpty(userId))
+        {
+            return await GetUserByIdAsync(userId);
         }
         return null;
     }

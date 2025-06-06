@@ -1,0 +1,172 @@
+@{
+    ViewData["Title"] = "OpenManus - 智能AI助手平台";
+}
+
+<!-- 引入Font Awesome图标 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<div class="container-fluid">
+    <!-- 主标题区域 -->
+    <div class="hero-section text-center py-5 mb-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px;">
+        <div class="container">
+            <h1 class="display-3 fw-bold mb-3">
+                <i class="fas fa-robot me-3"></i>OpenManus
+            </h1>
+            <p class="lead fs-4 mb-4">智能AI助手平台 - 让AI为您的工作赋能</p>
+            <a href="/Agent" class="btn btn-light btn-lg px-4 py-2">
+                <i class="fas fa-rocket me-2"></i>立即体验
+            </a>
+        </div>
+    </div>
+
+    <!-- Agent功能简介 -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-5">
+                <i class="fas fa-star text-warning me-2"></i>
+                AI Agent 核心功能
+            </h2>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- 文件操作功能 -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card h-100 shadow-sm border-0" style="transition: transform 0.3s;">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-file-alt fa-3x text-primary"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">文件操作管理</h5>
+                    <p class="card-text text-muted">
+                        智能文件读取、编辑、创建和管理。支持多种文件格式，让文件处理变得简单高效。
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Python代码执行 -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card h-100 shadow-sm border-0" style="transition: transform 0.3s;">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fab fa-python fa-3x text-success"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">代码执行引擎</h5>
+                    <p class="card-text text-muted">
+                        实时Python代码执行和调试。支持数据分析、算法实现和自动化脚本运行。
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 信息搜索 -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card h-100 shadow-sm border-0" style="transition: transform 0.3s;">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-search fa-3x text-info"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">智能信息搜索</h5>
+                    <p class="card-text text-muted">
+                        快速准确的信息检索和知识查询。帮您找到所需的资料和解决方案。
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 任务规划 -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card h-100 shadow-sm border-0" style="transition: transform 0.3s;">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-tasks fa-3x text-warning"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">复杂任务规划</h5>
+                    <p class="card-text text-muted">
+                        智能任务分解和执行规划。将复杂问题拆解为可执行的步骤，提高工作效率。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 使用场景 -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="text-center mb-4">
+                <i class="fas fa-lightbulb text-warning me-2"></i>
+                适用场景
+            </h3>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="text-center">
+                <i class="fas fa-code fa-2x text-primary mb-3"></i>
+                <h5>开发者助手</h5>
+                <p class="text-muted">代码审查、调试协助、技术文档生成</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center">
+                <i class="fas fa-chart-bar fa-2x text-success mb-3"></i>
+                <h5>数据分析</h5>
+                <p class="text-muted">数据处理、可视化分析、报告生成</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center">
+                <i class="fas fa-cogs fa-2x text-info mb-3"></i>
+                <h5>自动化办公</h5>
+                <p class="text-muted">文档处理、流程自动化、效率提升</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 开始使用 -->
+    <div class="text-center py-5" style="background: #f8f9fa; border-radius: 15px;">
+        <h3 class="mb-3">准备好开始了吗？</h3>
+        <p class="text-muted mb-4">体验强大的AI助手功能，让工作变得更加智能高效</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="/Agent" class="btn btn-primary btn-lg">
+                <i class="fas fa-play me-2"></i>开始对话
+            </a>
+            <a href="/UserManagement" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-user me-2"></i>用户管理
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.hero-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>') repeat;
+    pointer-events: none;
+}
+
+.feature-icon {
+    transition: transform 0.3s ease;
+}
+
+.card:hover .feature-icon {
+    transform: scale(1.1);
+}
+</style>

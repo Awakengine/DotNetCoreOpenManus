@@ -3,3 +3,5 @@
 /.vs/OpenManusDotNetCore/CopilotIndices
 /.vs/OpenManusDotNetCore/DesignTimeBuild
 /.vs/OpenManusDotNetCore/FileContentIndex
+/OpenManus.Web/bin
+/OpenManus.Web/obj
