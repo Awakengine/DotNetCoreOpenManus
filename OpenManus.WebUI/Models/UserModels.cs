@@ -45,6 +45,18 @@ public class UserInfo
     public string Avatar { get; set; } = "fas fa-user";
     
     /// <summary>
+    /// 密码哈希（仅用于注册用户）
+    /// </summary>
+    [JsonIgnore]
+    public string PasswordHash { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// 密码盐值（仅用于注册用户）
+    /// </summary>
+    [JsonIgnore]
+    public string PasswordSalt { get; set; } = string.Empty;
+    
+    /// <summary>
     /// 用户状态
     /// </summary>
     public string Status { get; set; } = "在线";

@@ -1,5 +1,7 @@
 using System.Text.Json;
 using System.Collections.Concurrent;
+using System.Security.Cryptography;
+using System.Text;
 using OpenManus.WebUI.Models;
 
 namespace OpenManus.WebUI.Services;
@@ -141,6 +143,41 @@ public class UserService : IUserService
     }
 
     /// <summary>
+    /// 生成密码盐值
+    /// </summary>
+    private static string GenerateSalt()
+    {
+        var saltBytes = new byte[32];
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(saltBytes);
+        }
+        return Convert.ToBase64String(saltBytes);
+    }
+
+    /// <summary>
+    /// 计算密码哈希
+    /// </summary>
+    private static string ComputePasswordHash(string password, string salt)
+    {
+        var saltBytes = Convert.FromBase64String(salt);
+        var passwordBytes = Encoding.UTF8.GetBytes(password);
+        
+        var hashBytes = Rfc2898DeriveBytes.Pbkdf2(passwordBytes, saltBytes, 10000, HashAlgorithmName.SHA256, 32);
+        
+        return Convert.ToBase64String(hashBytes);
+    }
+
+    /// <summary>
+    /// 验证密码
+    /// </summary>
+    private static bool VerifyPassword(string password, string hash, string salt)
+    {
+        var computedHash = ComputePasswordHash(password, salt);
+        return computedHash == hash;
+    }
+
+    /// <summary>
     /// 创建注册用户
     /// </summary>
     public async Task<UserInfo> CreateRegisteredUserAsync(string name, string avatar)
@@ -156,6 +193,34 @@ public class UserService : IUserService
             Status = "在线",
             CreatedAt = DateTime.UtcNow,
             LastActivity = DateTime.UtcNow
+        };
+        
+        _userCache.TryAdd(userId, userInfo);
+        await SaveUsersToFileAsync();
+        
+        return userInfo;
+    }
+
+    /// <summary>
+    /// 创建带密码的注册用户
+    /// </summary>
+    public async Task<UserInfo> CreateRegisteredUserWithPasswordAsync(string name, string password, string avatar)
+    {
+        var userId = Guid.NewGuid().ToString();
+        var salt = GenerateSalt();
+        var passwordHash = ComputePasswordHash(password, salt);
+        
+        var userInfo = new UserInfo
+        {
+            Id = userId,
+            Name = name,
+            Type = UserType.Registered,
+            Avatar = string.IsNullOrEmpty(avatar) ? "fas fa-user" : avatar,
+            Status = "在线",
+            CreatedAt = DateTime.UtcNow,
+            LastActivity = DateTime.UtcNow,
+            PasswordHash = passwordHash,
+            PasswordSalt = salt
         };
         
         _userCache.TryAdd(userId, userInfo);
@@ -403,7 +468,7 @@ public class UserService : IUserService
     /// <summary>
     /// 用户退出登录
     /// </summary>
-    public async Task LogoutAsync()
+    public Task LogoutAsync()
     {
         _currentUserId = null;
         // 清理本地存储的用户ID文件
@@ -419,6 +484,7 @@ public class UserService : IUserService
         {
             Console.WriteLine($"清理当前用户ID文件失败: {ex.Message}");
         }
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -567,5 +633,34 @@ public class UserService : IUserService
             await UpdateUserActivityAsync(user.Id);
         }
         return user;
+    }
+
+    /// <summary>
+    /// 验证用户登录（带密码）
+    /// </summary>
+    public async Task<UserInfo?> ValidateUserLoginWithPasswordAsync(string username, string password)
+    {
+        var user = await GetUserByNameAsync(username);
+        if (user != null && user.Type == UserType.Registered)
+        {
+            // 检查是否有密码设置
+            if (!string.IsNullOrEmpty(user.PasswordHash) && !string.IsNullOrEmpty(user.PasswordSalt))
+            {
+                // 验证密码
+                if (VerifyPassword(password, user.PasswordHash, user.PasswordSalt))
+                {
+                    // 更新用户活动时间
+                    await UpdateUserActivityAsync(user.Id);
+                    return user;
+                }
+            }
+            else
+            {
+                // 兼容旧用户（没有密码的用户）
+                await UpdateUserActivityAsync(user.Id);
+                return user;
+            }
+        }
+        return null;
     }
 }

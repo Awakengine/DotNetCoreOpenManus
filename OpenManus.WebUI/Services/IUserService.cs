@@ -37,6 +37,15 @@ public interface IUserService
     Task<UserInfo> CreateRegisteredUserAsync(string name, string avatar);
     
     /// <summary>
+    /// 创建带密码的注册用户
+    /// </summary>
+    /// <param name="name">用户名称</param>
+    /// <param name="password">密码</param>
+    /// <param name="avatar">用户头像</param>
+    /// <returns>新创建的注册用户信息</returns>
+    Task<UserInfo> CreateRegisteredUserWithPasswordAsync(string name, string password, string avatar);
+    
+    /// <summary>
     /// 更新用户信息
     /// </summary>
     /// <param name="userInfo">用户信息</param>
@@ -138,4 +147,12 @@ public interface IUserService
     /// <param name="username">用户名</param>
     /// <returns>用户信息，如果验证失败返回null</returns>
     Task<UserInfo?> ValidateUserLoginAsync(string username);
+    
+    /// <summary>
+    /// 验证用户登录（带密码）
+    /// </summary>
+    /// <param name="username">用户名</param>
+    /// <param name="password">密码</param>
+    /// <returns>用户信息，如果验证失败返回null</returns>
+    Task<UserInfo?> ValidateUserLoginWithPasswordAsync(string username, string password);
 }

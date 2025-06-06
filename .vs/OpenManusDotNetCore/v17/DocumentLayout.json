@@ -7,6 +7,10 @@
       "RelativeMoniker": "D:0:0:{31C70E98-5591-4D1B-A437-55696D89F9CE}|OpenManus.WebUI\\OpenManus.WebUI.csproj|solutionrelative:openmanus.webui\\components\\pages\\usermanagement.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{31C70E98-5591-4D1B-A437-55696D89F9CE}|OpenManus.WebUI\\OpenManus.WebUI.csproj|d:\\github\\dotnetcoreopenmanus\\openmanus.webui\\components\\pages\\agent.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{31C70E98-5591-4D1B-A437-55696D89F9CE}|OpenManus.WebUI\\OpenManus.WebUI.csproj|solutionrelative:openmanus.webui\\components\\pages\\agent.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{31C70E98-5591-4D1B-A437-55696D89F9CE}|OpenManus.WebUI\\OpenManus.WebUI.csproj|d:\\github\\dotnetcoreopenmanus\\openmanus.webui\\components\\app.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{31C70E98-5591-4D1B-A437-55696D89F9CE}|OpenManus.WebUI\\OpenManus.WebUI.csproj|solutionrelative:openmanus.webui\\components\\app.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
@@ -42,7 +46,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 13,
+          "SelectedChildIndex": 14,
           "Children": [
             {
               "$type": "Bookmark",
@@ -95,12 +99,25 @@
             {
               "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "Agent.razor",
+              "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Components\\Pages\\Agent.razor",
+              "RelativeDocumentMoniker": "OpenManus.WebUI\\Components\\Pages\\Agent.razor",
+              "ToolTip": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Components\\Pages\\Agent.razor",
+              "RelativeToolTip": "OpenManus.WebUI\\Components\\Pages\\Agent.razor",
+              "ViewState": "AgIAAJcAAAAAAAAAAAAMwMEAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-06-06T07:19:17.806Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "App.razor",
               "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Components\\App.razor",
               "RelativeDocumentMoniker": "OpenManus.WebUI\\Components\\App.razor",
               "ToolTip": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Components\\App.razor",
               "RelativeToolTip": "OpenManus.WebUI\\Components\\App.razor",
-              "ViewState": "AgIAAAAAAAAAAAAAAADwvxwAAAAnAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAADwvxwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2025-06-06T07:18:33.565Z",
               "EditorCaption": ""
@@ -113,14 +130,14 @@
               "RelativeDocumentMoniker": "OpenManus.WebUI\\Components\\Pages\\UserManagement.razor",
               "ToolTip": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Components\\Pages\\UserManagement.razor",
               "RelativeToolTip": "OpenManus.WebUI\\Components\\Pages\\UserManagement.razor",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAPMAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAB8AAAAAAAAAAAAEwCUAAABPAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2025-06-06T06:57:42.877Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "SettingsModal.razor.css",
               "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Components\\SettingsModal.razor.css",
               "RelativeDocumentMoniker": "OpenManus.WebUI\\Components\\SettingsModal.razor.css",
@@ -133,7 +150,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "AgentInputArea.razor",
               "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Components\\Pages\\AgentInputArea.razor",
               "RelativeDocumentMoniker": "OpenManus.WebUI\\Components\\Pages\\AgentInputArea.razor",
@@ -146,7 +163,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "NavMenu.razor",
               "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Components\\Layout\\NavMenu.razor",
               "RelativeDocumentMoniker": "OpenManus.WebUI\\Components\\Layout\\NavMenu.razor",
@@ -159,7 +176,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "AgentService.cs",
               "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Services\\AgentService.cs",
               "RelativeDocumentMoniker": "OpenManus.WebUI\\Services\\AgentService.cs",
@@ -172,7 +189,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "Agent.razor.css",
               "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Components\\Pages\\Agent.razor.css",
               "RelativeDocumentMoniker": "OpenManus.WebUI\\Components\\Pages\\Agent.razor.css",
@@ -185,7 +202,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "SettingsModal.razor",
               "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Components\\SettingsModal.razor",
               "RelativeDocumentMoniker": "OpenManus.WebUI\\Components\\SettingsModal.razor",

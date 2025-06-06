@@ -9,7 +9,6 @@
 
 <PageTitle>用户管理</PageTitle>
 
-
 <div class="user-management-container">
 	<div class="user-management-card">
 		<div class="text-center mb-4">
@@ -34,17 +33,24 @@
 			</div>
 		}
 
-		<!-- 登录表单 -->
-		<EditForm Model="@loginForm" OnValidSubmit="@HandleLogin">
+		<EditForm Model="@loginForm" OnValidSubmit="@HandleLogin"  FormName="UserManagementForm">
 			<DataAnnotationsValidator />
 			<ValidationSummary class="text-danger" />
 
 			<div class="mb-3">
-				<label for="loginUserName" class="form-label">
+				<label for="userName" class="form-label">
 					<i class="fas fa-user me-2"></i>用户名
 				</label>
-				<InputText id="loginUserName" class="form-control" @bind-Value="loginForm.Name" placeholder="输入您的用户名" />
+				<InputText id="userName" class="form-control" @bind-Value="loginForm.Name" placeholder="输入您的用户名" />
 				<ValidationMessage For="@(() => loginForm.Name)" />
+			</div>
+
+			<div class="mb-3">
+				<label for="userPassword" class="form-label">
+					<i class="fas fa-lock me-2"></i>密码
+				</label>
+				<InputText id="userPassword" type="password" class="form-control" @bind-Value="loginForm.Password" placeholder="输入您的密码" />
+				<ValidationMessage For="@(() => loginForm.Password)" />
 			</div>
 
 			<div class="d-grid gap-2">
@@ -75,7 +81,7 @@
 				<i class="fas fa-user-secret me-2"></i>游客模式
 				<span class="guest-subtitle">快速体验，无需注册</span>
 			</button>
-		</div>
+			</div>
 	</div>
 </div>
 
@@ -119,6 +125,22 @@
 						</div>
 
 						<div class="mb-3">
+							<label for="registerPassword" class="form-label">
+								<i class="fas fa-lock me-2"></i>密码
+							</label>
+							<InputText id="registerPassword" type="password" class="form-control" @bind-Value="registerForm.Password" placeholder="设置您的密码（6-50个字符）" />
+							<ValidationMessage For="@(() => registerForm.Password)" />
+						</div>
+
+						<div class="mb-3">
+							<label for="registerConfirmPassword" class="form-label">
+								<i class="fas fa-lock me-2"></i>确认密码
+							</label>
+							<InputText id="registerConfirmPassword" type="password" class="form-control" @bind-Value="registerForm.ConfirmPassword" placeholder="再次输入密码" />
+							<ValidationMessage For="@(() => registerForm.ConfirmPassword)" />
+						</div>
+
+						<div class="mb-3">
 							<label for="registerUserAvatar" class="form-label">
 								<i class="fas fa-image me-2"></i>头像URL（可选）
 							</label>
@@ -148,11 +170,18 @@
 }
 
 @code {
-	private UserFormModel userForm { get; set; } = new();
-	private bool isLoginMode = true;
+	// 登录相关
+	public UserFormModel loginForm { get; set; } = new();
 	private bool isLoading = false;
 	private string errorMessage = string.Empty;
 	private string successMessage = string.Empty;
+
+	// 注册相关
+	public RegisterFormModel registerForm { get; set; } = new();
+	private bool isRegisterLoading = false;
+	private string registerErrorMessage = string.Empty;
+	private string registerSuccessMessage = string.Empty;
+	private bool showRegisterModal = false;
 
 	public class UserFormModel
 	{
@@ -160,18 +189,47 @@
 		[StringLength(20, MinimumLength = 2, ErrorMessage = "用户名长度必须在2-20个字符之间")]
 		public string Name { get; set; } = string.Empty;
 
+		[Required(ErrorMessage = "密码不能为空")]
+		[StringLength(50, MinimumLength = 6, ErrorMessage = "密码长度必须在6-50个字符之间")]
+		public string Password { get; set; } = string.Empty;
+
 		public string Avatar { get; set; } = string.Empty;
 	}
 
-	private void ToggleMode()
+	public class RegisterFormModel
 	{
-		isLoginMode = !isLoginMode;
-		errorMessage = string.Empty;
-		successMessage = string.Empty;
-		userForm = new UserFormModel();
+		[Required(ErrorMessage = "用户名不能为空")]
+		[StringLength(20, MinimumLength = 2, ErrorMessage = "用户名长度必须在2-20个字符之间")]
+		public string Name { get; set; } = string.Empty;
+
+		[Required(ErrorMessage = "密码不能为空")]
+		[StringLength(50, MinimumLength = 6, ErrorMessage = "密码长度必须在6-50个字符之间")]
+		public string Password { get; set; } = string.Empty;
+
+		[Required(ErrorMessage = "请确认密码")]
+		[Compare("Password", ErrorMessage = "两次输入的密码不一致")]
+		public string ConfirmPassword { get; set; } = string.Empty;
+
+		public string Avatar { get; set; } = string.Empty;
 	}
 
-	private async Task HandleSubmit()
+	private void ShowRegisterModal(MouseEventArgs e)
+	{
+		showRegisterModal = true;
+		registerErrorMessage = string.Empty;
+		registerSuccessMessage = string.Empty;
+		registerForm = new RegisterFormModel();
+	}
+
+	private void HideRegisterModal()
+	{
+		showRegisterModal = false;
+		registerErrorMessage = string.Empty;
+		registerSuccessMessage = string.Empty;
+		registerForm = new RegisterFormModel();
+	}
+
+	private async Task HandleLogin()
 	{
 		isLoading = true;
 		errorMessage = string.Empty;
@@ -179,85 +237,93 @@
 
 		try
 		{
-			if (string.IsNullOrWhiteSpace(userForm.Name))
+			// 登录逻辑 - 验证用户和密码
+			var existingUser = await UserService.ValidateUserLoginWithPasswordAsync(loginForm.Name, loginForm.Password);
+
+			if (existingUser != null)
 			{
-				errorMessage = "请输入用户名。";
-				return;
-			}
+				// 设置当前用户
+				await UserService.SetCurrentUserIdAsync(existingUser.Id);
 
-			if (isLoginMode)
-			{
-				// 登录逻辑 - 验证用户
-				var existingUser = await UserService.ValidateUserLoginAsync(userForm.Name);
+				successMessage = $"欢迎回来，{existingUser.Name}！";
 
-				if (existingUser != null)
-				{
-					// 设置当前用户
-					await UserService.SetCurrentUserIdAsync(existingUser.Id);
-
-					successMessage = $"欢迎回来，{existingUser.Name}！";
-
-					// 延迟跳转到主页
-					await Task.Delay(1000);
-					Navigation.NavigateTo("/");
-				}
-				else
-				{
-					errorMessage = "用户不存在，请检查用户名或选择注册。";
-				}
+				// 延迟跳转到主页
+				await Task.Delay(1000);
+				Navigation.NavigateTo("/");
 			}
 			else
 			{
-				// 注册逻辑 - 检查用户名是否已存在
-				var existingUser = await UserService.GetUserByNameAsync(userForm.Name);
-
-				if (existingUser != null)
-				{
-					errorMessage = "用户名已存在，请选择其他用户名。";
-				}
-				else
-				{
-					// 验证用户名格式
-					if (userForm.Name.Length < 2)
-					{
-						errorMessage = "用户名至少需要2个字符。";
-						return;
-					}
-
-					if (userForm.Name.Length > 20)
-					{
-						errorMessage = "用户名不能超过20个字符。";
-						return;
-					}
-
-					// 验证头像URL格式（如果不为空）
-					if (!string.IsNullOrWhiteSpace(userForm.Avatar) && !Uri.IsWellFormedUriString(userForm.Avatar, UriKind.Absolute))
-					{
-						errorMessage = "请输入有效的头像URL地址。";
-						return;
-					}
-
-					// 创建新用户
-					var newUser = await UserService.CreateRegisteredUserAsync(userForm.Name, userForm.Avatar ?? string.Empty);
-
-					// 设置当前用户
-					await UserService.SetCurrentUserIdAsync(newUser.Id);
-
-					successMessage = $"注册成功！欢迎，{newUser.Name}！";
-
-					// 延迟跳转到主页
-					await Task.Delay(1000);
-					Navigation.NavigateTo("/");
-				}
+				errorMessage = "用户名或密码错误，请检查后重试。";
 			}
 		}
 		catch (Exception ex)
 		{
-			errorMessage = $"操作失败：{ex.Message}";
+			errorMessage = $"登录失败：{ex.Message}";
 		}
 		finally
 		{
 			isLoading = false;
+		}
+	}
+
+	private async Task HandleRegister()
+	{
+		isRegisterLoading = true;
+		registerErrorMessage = string.Empty;
+		registerSuccessMessage = string.Empty;
+
+		try
+		{
+			// 注册逻辑 - 检查用户名是否已存在
+			var existingUser = await UserService.GetUserByNameAsync(registerForm.Name);
+
+			if (existingUser != null)
+			{
+				registerErrorMessage = "用户名已存在，请选择其他用户名。";
+			}
+			else
+			{
+				// 验证用户名格式
+				if (registerForm.Name.Length < 2)
+				{
+					registerErrorMessage = "用户名至少需要2个字符。";
+					return;
+				}
+
+				if (registerForm.Name.Length > 20)
+				{
+					registerErrorMessage = "用户名不能超过20个字符。";
+					return;
+				}
+
+				// 验证头像URL格式（如果不为空）
+				if (!string.IsNullOrWhiteSpace(registerForm.Avatar) && !Uri.IsWellFormedUriString(registerForm.Avatar, UriKind.Absolute))
+				{
+					registerErrorMessage = "请输入有效的头像URL地址。";
+					return;
+				}
+
+				// 创建新用户
+				var newUser = await UserService.CreateRegisteredUserWithPasswordAsync(registerForm.Name, registerForm.Password, registerForm.Avatar ?? string.Empty);
+
+				// 设置当前用户
+				await UserService.SetCurrentUserIdAsync(newUser.Id);
+
+				registerSuccessMessage = $"注册成功！欢迎，{newUser.Name}！";
+
+				// 延迟后关闭模态框并跳转到主页
+				await Task.Delay(1500);
+				HideRegisterModal();
+				Navigation.NavigateTo("/");
+			}
+		}
+		catch (Exception ex)
+		{
+			registerErrorMessage = $"注册失败：{ex.Message}";
+		}
+		finally
+		{
+			isRegisterLoading = false;
 		}
 	}
 
@@ -298,4 +364,4 @@
 			isLoading = false;
 		}
 	}
-	}
+}
