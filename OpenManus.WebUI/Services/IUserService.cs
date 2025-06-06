@@ -117,4 +117,25 @@ public interface IUserService
     /// 用户退出登录
     /// </summary>
     Task LogoutAsync();
+    
+    /// <summary>
+    /// 根据用户名查找注册用户
+    /// </summary>
+    /// <param name="username">用户名</param>
+    /// <returns>用户信息</returns>
+    Task<UserInfo?> GetUserByNameAsync(string username);
+    
+    /// <summary>
+    /// 根据浏览器指纹获取或创建游客用户
+    /// </summary>
+    /// <param name="browserFingerprint">浏览器指纹</param>
+    /// <returns>用户信息</returns>
+    Task<UserInfo> GetOrCreateGuestUserByFingerprintAsync(string browserFingerprint);
+    
+    /// <summary>
+    /// 验证用户登录
+    /// </summary>
+    /// <param name="username">用户名</param>
+    /// <returns>用户信息，如果验证失败返回null</returns>
+    Task<UserInfo?> ValidateUserLoginAsync(string username);
 }

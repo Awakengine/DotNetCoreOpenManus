@@ -97,6 +97,51 @@ window.initModernUI = () => {
     }
 };
 
+// 浏览器指纹生成功能
+window.generateBrowserFingerprint = () => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.textBaseline = 'top';
+    ctx.font = '14px Arial';
+    ctx.fillText('Browser fingerprint', 2, 2);
+    
+    const fingerprint = {
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+        platform: navigator.platform,
+        screenResolution: `${screen.width}x${screen.height}`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        canvas: canvas.toDataURL(),
+        cookieEnabled: navigator.cookieEnabled,
+        doNotTrack: navigator.doNotTrack,
+        hardwareConcurrency: navigator.hardwareConcurrency || 0,
+        deviceMemory: navigator.deviceMemory || 0,
+        colorDepth: screen.colorDepth,
+        pixelDepth: screen.pixelDepth
+    };
+    
+    // 生成简单的哈希值作为指纹ID
+    const fingerprintString = JSON.stringify(fingerprint);
+    let hash = 0;
+    for (let i = 0; i < fingerprintString.length; i++) {
+        const char = fingerprintString.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // 转换为32位整数
+    }
+    
+    return Math.abs(hash).toString(36);
+};
+
+// 获取或创建浏览器指纹ID
+window.getBrowserFingerprintId = () => {
+    let fingerprintId = localStorage.getItem('browserFingerprintId');
+    if (!fingerprintId) {
+        fingerprintId = window.generateBrowserFingerprint();
+        localStorage.setItem('browserFingerprintId', fingerprintId);
+    }
+    return fingerprintId;
+};
+
 // 更新执行停靠区域位置
 window.updateExecutionDockPosition = (executionDockElement) => {
     if (!executionDockElement) return;

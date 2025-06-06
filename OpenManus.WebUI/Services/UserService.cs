@@ -354,8 +354,18 @@ public class UserService : IUserService
     public async Task SetCurrentUserIdAsync(string userId)
     {
         _currentUserId = userId;
-        // 可以在这里添加持久化逻辑，比如保存到本地存储
-        await Task.CompletedTask;
+        // 保存到本地存储以实现持久化
+        try
+        {
+            var currentUserFile = Path.Combine(_dataPath, "current-user.json");
+            var currentUserData = new { UserId = userId, Timestamp = DateTime.UtcNow };
+            var json = JsonSerializer.Serialize(currentUserData, _jsonOptions);
+            await File.WriteAllTextAsync(currentUserFile, json);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"保存当前用户ID失败: {ex.Message}");
+        }
     }
     
     /// <summary>
@@ -364,8 +374,29 @@ public class UserService : IUserService
     /// <returns>当前用户ID</returns>
     public async Task<string?> GetCurrentUserIdAsync()
     {
-        // 可以在这里添加从本地存储读取的逻辑
-        await Task.CompletedTask;
+        // 如果内存中没有，尝试从本地存储读取
+        if (string.IsNullOrEmpty(_currentUserId))
+        {
+            try
+            {
+                var currentUserFile = Path.Combine(_dataPath, "current-user.json");
+                if (File.Exists(currentUserFile))
+                {
+                    var json = await File.ReadAllTextAsync(currentUserFile);
+                    var currentUserData = JsonSerializer.Deserialize<dynamic>(json);
+                    if (currentUserData != null)
+                    {
+                        var userIdProperty = ((JsonElement)currentUserData).GetProperty("userId");
+                        _currentUserId = userIdProperty.GetString();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"读取当前用户ID失败: {ex.Message}");
+            }
+        }
+        
         return _currentUserId;
     }
     
@@ -375,8 +406,19 @@ public class UserService : IUserService
     public async Task LogoutAsync()
     {
         _currentUserId = null;
-        // 可以在这里添加清理本地存储的逻辑
-        await Task.CompletedTask;
+        // 清理本地存储的用户ID文件
+        try
+        {
+            var currentUserFile = Path.Combine(_dataPath, "current-user.json");
+            if (File.Exists(currentUserFile))
+            {
+                File.Delete(currentUserFile);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"清理当前用户ID文件失败: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -460,5 +502,70 @@ public class UserService : IUserService
         {
             Console.WriteLine($"保存用户会话关联数据失败: {ex.Message}");
         }
+    }
+    
+    /// <summary>
+    /// 根据用户名查找注册用户
+    /// </summary>
+    public async Task<UserInfo?> GetUserByNameAsync(string username)
+    {
+        await Task.Delay(1); // 异步方法占位
+        
+        return _userCache.Values.FirstOrDefault(u => 
+            u.Name.Equals(username, StringComparison.OrdinalIgnoreCase) && 
+            u.Type == UserType.Registered);
+    }
+    
+    /// <summary>
+    /// 根据浏览器指纹获取或创建游客用户
+    /// </summary>
+    public async Task<UserInfo> GetOrCreateGuestUserByFingerprintAsync(string browserFingerprint)
+    {
+        // 查找是否已存在基于此指纹的游客用户
+        var existingUser = _userCache.Values.FirstOrDefault(u => 
+            u.Type == UserType.Guest && 
+            u.Id.StartsWith($"guest_{browserFingerprint}"));
+            
+        if (existingUser != null)
+        {
+            // 更新最后活动时间
+            existingUser.LastActivity = DateTime.UtcNow;
+            await UpdateUserAsync(existingUser);
+            return existingUser;
+        }
+        
+        // 创建新的游客用户
+        var userId = $"guest_{browserFingerprint}_{DateTime.Now:yyyyMMddHHmmss}";
+        var userName = $"游客_{browserFingerprint.Substring(0, Math.Min(6, browserFingerprint.Length))}";
+        
+        var userInfo = new UserInfo
+        {
+            Id = userId,
+            Name = userName,
+            Type = UserType.Guest,
+            Avatar = "fas fa-user-secret",
+            Status = "在线",
+            CreatedAt = DateTime.UtcNow,
+            LastActivity = DateTime.UtcNow
+        };
+        
+        _userCache.TryAdd(userId, userInfo);
+        await SaveUsersToFileAsync();
+        
+        return userInfo;
+    }
+    
+    /// <summary>
+    /// 验证用户登录
+    /// </summary>
+    public async Task<UserInfo?> ValidateUserLoginAsync(string username)
+    {
+        var user = await GetUserByNameAsync(username);
+        if (user != null)
+        {
+            // 更新用户活动时间
+            await UpdateUserActivityAsync(user.Id);
+        }
+        return user;
     }
 }
