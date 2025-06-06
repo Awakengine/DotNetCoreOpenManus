@@ -25,9 +25,41 @@ namespace OpenManus.Web.Controllers
         {
             try
             {
-                // 获取或创建当前用户（支持游客模式）
-                var currentUser = await _userService.GetCurrentUserAsync();
-                var userId = currentUser.Id;
+                // 检查用户是否已登录
+                var userIdFromSession = HttpContext.Session.GetString("UserId");
+                
+                UserInfo currentUser;
+                string userId;
+                
+                if (!string.IsNullOrEmpty(userIdFromSession))
+                {
+                    // 用户已登录，获取用户信息
+                    currentUser = await _userService.GetUserByIdAsync(userIdFromSession);
+                    if (currentUser == null)
+                    {
+                        // 用户不存在，清除会话并重定向到登录页面
+                        HttpContext.Session.Clear();
+                        return RedirectToAction("Index", "UserManagement");
+                    }
+                    userId = currentUser.Id;
+                }
+                else
+                {
+                    // 用户未登录
+                    if (!string.IsNullOrEmpty(sessionId))
+                    {
+                        // 如果有sessionId参数但用户未登录，重定向到登录页面
+                        return RedirectToAction("Index", "UserManagement");
+                    }
+                    
+                    // 没有sessionId参数且用户未登录，创建游客用户
+                    currentUser = await _userService.CreateGuestUserAsync();
+                    userId = currentUser.Id;
+                    
+                    // 设置会话信息
+                    HttpContext.Session.SetString("UserId", userId);
+                    HttpContext.Session.SetString("UserName", currentUser.Name);
+                }
                 
                 ChatSessionInfo? session = null;
                 

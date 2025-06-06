@@ -3,12 +3,24 @@
   "WorkspaceRootPath": "D:\\GitHub\\DotNetCoreOpenManus\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{F1E6DF95-1CD0-43F2-BA12-ADF916335089}|OpenManus.Web\\OpenManus.Web.csproj|d:\\github\\dotnetcoreopenmanus\\openmanus.web\\services\\iuserservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{F1E6DF95-1CD0-43F2-BA12-ADF916335089}|OpenManus.Web\\OpenManus.Web.csproj|solutionrelative:openmanus.web\\services\\iuserservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{F1E6DF95-1CD0-43F2-BA12-ADF916335089}|OpenManus.Web\\OpenManus.Web.csproj|d:\\github\\dotnetcoreopenmanus\\openmanus.web\\services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F1E6DF95-1CD0-43F2-BA12-ADF916335089}|OpenManus.Web\\OpenManus.Web.csproj|solutionrelative:openmanus.web\\services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F1E6DF95-1CD0-43F2-BA12-ADF916335089}|OpenManus.Web\\OpenManus.Web.csproj|d:\\github\\dotnetcoreopenmanus\\openmanus.web\\controllers\\usermanagementcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F1E6DF95-1CD0-43F2-BA12-ADF916335089}|OpenManus.Web\\OpenManus.Web.csproj|solutionrelative:openmanus.web\\controllers\\usermanagementcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F1E6DF95-1CD0-43F2-BA12-ADF916335089}|OpenManus.Web\\OpenManus.Web.csproj|d:\\github\\dotnetcoreopenmanus\\openmanus.web\\views\\usermanagement\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F1E6DF95-1CD0-43F2-BA12-ADF916335089}|OpenManus.Web\\OpenManus.Web.csproj|solutionrelative:openmanus.web\\views\\usermanagement\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{F1E6DF95-1CD0-43F2-BA12-ADF916335089}|OpenManus.Web\\OpenManus.Web.csproj|d:\\github\\dotnetcoreopenmanus\\openmanus.web\\controllers\\chatcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{F1E6DF95-1CD0-43F2-BA12-ADF916335089}|OpenManus.Web\\OpenManus.Web.csproj|solutionrelative:openmanus.web\\controllers\\chatcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F1E6DF95-1CD0-43F2-BA12-ADF916335089}|OpenManus.Web\\OpenManus.Web.csproj|d:\\github\\dotnetcoreopenmanus\\openmanus.web\\services\\iuserservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F1E6DF95-1CD0-43F2-BA12-ADF916335089}|OpenManus.Web\\OpenManus.Web.csproj|solutionrelative:openmanus.web\\services\\iuserservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{31C70E98-5591-4D1B-A437-55696D89F9CE}|OpenManus.WebUI\\OpenManus.WebUI.csproj|d:\\github\\dotnetcoreopenmanus\\openmanus.webui\\components\\pages\\usermanagement.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
@@ -59,14 +71,14 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "IUserService.cs",
-              "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.Web\\Services\\IUserService.cs",
-              "RelativeDocumentMoniker": "OpenManus.Web\\Services\\IUserService.cs",
-              "ToolTip": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.Web\\Services\\IUserService.cs",
-              "RelativeToolTip": "OpenManus.Web\\Services\\IUserService.cs",
-              "ViewState": "AgIAADsAAAAAAAAAAAAcwBYAAAAEAAAAAAAAAA==",
+              "Title": "UserService.cs",
+              "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.Web\\Services\\UserService.cs",
+              "RelativeDocumentMoniker": "OpenManus.Web\\Services\\UserService.cs",
+              "ToolTip": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.Web\\Services\\UserService.cs",
+              "RelativeToolTip": "OpenManus.Web\\Services\\UserService.cs",
+              "ViewState": "AgIAAEoAAAAAAAAAAADgv1sAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-06T09:17:43.372Z",
+              "WhenOpened": "2025-06-06T10:20:43.821Z",
               "EditorCaption": ""
             },
             {
@@ -115,10 +127,6 @@
             },
             {
               "$type": "Bookmark",
-              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
-            },
-            {
-              "$type": "Bookmark",
               "Name": "ST:133:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
             },
             {
@@ -126,25 +134,60 @@
               "Name": "ST:130:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
             },
             {
-              "$type": "Bookmark",
-              "Name": "ST:129:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "UserManagementController.cs",
+              "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.Web\\Controllers\\UserManagementController.cs",
+              "RelativeDocumentMoniker": "OpenManus.Web\\Controllers\\UserManagementController.cs",
+              "ToolTip": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.Web\\Controllers\\UserManagementController.cs",
+              "RelativeToolTip": "OpenManus.Web\\Controllers\\UserManagementController.cs",
+              "ViewState": "AgIAAFgAAAAAAAAAAAAcwHgAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-06T10:17:44.691Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.Web\\Views\\UserManagement\\Index.cshtml",
+              "RelativeDocumentMoniker": "OpenManus.Web\\Views\\UserManagement\\Index.cshtml",
+              "ToolTip": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.Web\\Views\\UserManagement\\Index.cshtml",
+              "RelativeToolTip": "OpenManus.Web\\Views\\UserManagement\\Index.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-06-06T10:17:35.06Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "IUserService.cs",
+              "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.Web\\Services\\IUserService.cs",
+              "RelativeDocumentMoniker": "OpenManus.Web\\Services\\IUserService.cs",
+              "ToolTip": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.Web\\Services\\IUserService.cs",
+              "RelativeToolTip": "OpenManus.Web\\Services\\IUserService.cs",
+              "ViewState": "AgIAAC8AAAAAAAAAAAAnwEIAAAAOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-06T09:17:43.372Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "ChatController.cs",
               "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.Web\\Controllers\\ChatController.cs",
               "RelativeDocumentMoniker": "OpenManus.Web\\Controllers\\ChatController.cs",
               "ToolTip": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.Web\\Controllers\\ChatController.cs",
               "RelativeToolTip": "OpenManus.Web\\Controllers\\ChatController.cs",
-              "ViewState": "AgIAACkAAAAAAAAAAAAWwD4AAABJAAAAAAAAAA==",
+              "ViewState": "AgIAAJ0AAAAAAAAAAAAcwKoAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-06-06T09:17:35.929Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 8,
               "Title": "Agent.razor",
               "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Components\\Pages\\Agent.razor",
               "RelativeDocumentMoniker": "OpenManus.WebUI\\Components\\Pages\\Agent.razor",
@@ -157,7 +200,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 7,
               "Title": "App.razor",
               "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Components\\App.razor",
               "RelativeDocumentMoniker": "OpenManus.WebUI\\Components\\App.razor",
@@ -170,7 +213,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 5,
               "Title": "UserManagement.razor",
               "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Components\\Pages\\UserManagement.razor",
               "RelativeDocumentMoniker": "OpenManus.WebUI\\Components\\Pages\\UserManagement.razor",
@@ -183,7 +226,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 11,
               "Title": "SettingsModal.razor.css",
               "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Components\\SettingsModal.razor.css",
               "RelativeDocumentMoniker": "OpenManus.WebUI\\Components\\SettingsModal.razor.css",
@@ -196,7 +239,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 12,
               "Title": "AgentInputArea.razor",
               "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Components\\Pages\\AgentInputArea.razor",
               "RelativeDocumentMoniker": "OpenManus.WebUI\\Components\\Pages\\AgentInputArea.razor",
@@ -209,7 +252,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 10,
               "Title": "NavMenu.razor",
               "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Components\\Layout\\NavMenu.razor",
               "RelativeDocumentMoniker": "OpenManus.WebUI\\Components\\Layout\\NavMenu.razor",
@@ -222,7 +265,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 13,
               "Title": "AgentService.cs",
               "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Services\\AgentService.cs",
               "RelativeDocumentMoniker": "OpenManus.WebUI\\Services\\AgentService.cs",
@@ -235,7 +278,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 9,
               "Title": "Agent.razor.css",
               "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Components\\Pages\\Agent.razor.css",
               "RelativeDocumentMoniker": "OpenManus.WebUI\\Components\\Pages\\Agent.razor.css",
@@ -248,7 +291,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 6,
               "Title": "SettingsModal.razor",
               "DocumentMoniker": "D:\\GitHub\\DotNetCoreOpenManus\\OpenManus.WebUI\\Components\\SettingsModal.razor",
               "RelativeDocumentMoniker": "OpenManus.WebUI\\Components\\SettingsModal.razor",
