@@ -25,9 +25,9 @@ public class ChatHistoryService : IChatHistoryService
     private const int MaxCachedSessions = 100;
 
     /// <summary>
-    /// 后台保存任务队列
+    /// 后台保存任务队列（包含用户ID用于数据隔离）
     /// </summary>
-    private readonly ConcurrentQueue<(string sessionId, AgentMemory memory)> _saveQueue = new();
+    private readonly ConcurrentQueue<(string sessionId, AgentMemory memory, string? userId)> _saveQueue = new();
     
     /// <summary>
     /// 批量保存的会话ID集合
@@ -75,11 +75,12 @@ public class ChatHistoryService : IChatHistoryService
     }
 
     /// <summary>
-    /// 获取指定会话的代理内存
+    /// 获取指定会话的代理内存（带用户隔离）
     /// </summary>
     /// <param name="sessionId">会话ID</param>
+    /// <param name="userId">用户ID，用于数据隔离</param>
     /// <returns>代理内存对象</returns>
-    public async Task<AgentMemory> GetSessionMemoryAsync(string sessionId)
+    public async Task<AgentMemory> GetSessionMemoryAsync(string sessionId, string? userId = null)
     {
         // 首先检查内存缓存
         if (_sessionCache.TryGetValue(sessionId, out var cachedMemory))
@@ -87,8 +88,8 @@ public class ChatHistoryService : IChatHistoryService
             return cachedMemory;
         }
 
-        // 从文件加载
-        var filePath = GetSessionFilePath(sessionId);
+        // 从文件加载（考虑用户隔离）
+        var filePath = GetSessionFilePath(sessionId, userId);
         if (File.Exists(filePath))
         {
             try
@@ -121,21 +122,22 @@ public class ChatHistoryService : IChatHistoryService
     }
 
     /// <summary>
-    /// 保存会话内存到持久化存储
+    /// 保存会话内存到持久化存储（带用户隔离）
     /// </summary>
     /// <param name="sessionId">会话ID</param>
     /// <param name="memory">代理内存对象</param>
+    /// <param name="userId">用户ID，用于数据隔离</param>
     /// <returns>异步任务</returns>
-    public async Task SaveSessionMemoryAsync(string sessionId, AgentMemory memory)
+    public async Task SaveSessionMemoryAsync(string sessionId, AgentMemory memory, string? userId = null)
     {
         // 更新缓存
         _sessionCache.AddOrUpdate(sessionId, memory, (key, oldValue) => memory);
 
-        // 添加到后台保存队列
-        _saveQueue.Enqueue((sessionId, memory));
+        // 添加到后台保存队列（包含用户ID）
+        _saveQueue.Enqueue((sessionId, memory, userId));
 
         // 对于重要操作，也可以立即保存
-        await SaveSessionToFileAsync(sessionId, memory);
+        await SaveSessionToFileAsync(sessionId, memory, userId);
     }
 
     /// <summary>
@@ -155,8 +157,8 @@ public class ChatHistoryService : IChatHistoryService
                 _pendingSaves.Add(sessionId);
             }
             
-            // 添加到后台保存队列
-            _saveQueue.Enqueue((sessionId, memory));
+            // 添加到后台保存队列（包含用户ID）
+            _saveQueue.Enqueue((sessionId, memory, null));
         }
         catch (Exception ex)
         {
@@ -173,33 +175,39 @@ public class ChatHistoryService : IChatHistoryService
     }
 
     /// <summary>
-    /// 添加消息到会话并实时保存
+    /// 添加消息到会话并实时保存（支持用户隔离）
     /// </summary>
     /// <param name="sessionId">会话ID</param>
     /// <param name="message">要添加的消息</param>
-    /// <returns>异步任务</returns>
-    public async Task<AgentMemory> AddMessageAsync(string sessionId, AgentMessage message)
+    /// <param name="userId">用户ID，用于数据隔离</param>
+    /// <returns>更新后的代理内存</returns>
+    public async Task<AgentMemory> AddMessageAsync(string sessionId, AgentMessage message, string? userId = null)
     {
-        var memory = await GetSessionMemoryAsync(sessionId);
+        var memory = await GetSessionMemoryAsync(sessionId, userId);
         memory.AddMessage(message.OrderBy, message.Role, message.Content, message.ToolCallId);
 
-        // 实时保存到后台队列
-        _saveQueue.Enqueue((sessionId, memory));
+        // 立即保存到内存缓存
+        _sessionCache.AddOrUpdate(sessionId, memory, (key, oldValue) => memory);
+        
+        // 异步保存到文件（包含用户ID）
+        await SaveSessionMemoryAsync(sessionId, memory, userId);
+        
         return memory;
     }
 
     /// <summary>
-    /// 清除指定会话的所有消息
+    /// 清除指定会话的所有消息（带用户隔离）
     /// </summary>
     /// <param name="sessionId">会话ID</param>
+    /// <param name="userId">用户ID，用于数据隔离</param>
     /// <returns>异步任务</returns>
-    public async Task ClearSessionAsync(string sessionId)
+    public async Task ClearSessionAsync(string sessionId, string? userId = null)
     {
         // 清除缓存
         if (_sessionCache.TryRemove(sessionId, out _))
         {
-            // 删除文件
-            var filePath = GetSessionFilePath(sessionId);
+            // 删除文件（考虑用户隔离）
+            var filePath = GetSessionFilePath(sessionId, userId);
             if (File.Exists(filePath))
             {
                 File.Delete(filePath);
@@ -210,76 +218,117 @@ public class ChatHistoryService : IChatHistoryService
     }
 
     /// <summary>
-    /// 获取所有会话的基本信息
+    /// 获取所有会话的基本信息（支持用户隔离）
     /// </summary>
+    /// <param name="userId">用户ID，用于数据隔离</param>
     /// <returns>会话信息列表</returns>
-    public async Task<List<ChatSessionInfo>> GetSessionsAsync()
+    public async Task<List<ChatSessionInfo>> GetSessionsAsync(string? userId = null)
     {
         var sessions = new List<ChatSessionInfo>();
-
-        // 扫描数据目录中的所有会话文件
-        var files = Directory.GetFiles(_dataPath, "*.json");
-
-        foreach (var file in files)
+        
+        try
         {
-            try
+            string dataPath;
+             if (!string.IsNullOrEmpty(userId))
+             {
+                 // 用户特定的数据目录
+                 dataPath = Path.Combine(_dataPath, "Users", userId);
+             }
+             else
+             {
+                 // 默认数据目录（兼容旧版本）
+                 dataPath = _dataPath;
+             }
+            
+            // 确保数据目录存在
+            if (!Directory.Exists(dataPath))
             {
-                var sessionId = Path.GetFileNameWithoutExtension(file);
-                var fileInfo = new System.IO.FileInfo(file);
+                Directory.CreateDirectory(dataPath);
+                return sessions;
+            }
+            
+            // 扫描数据目录中的所有会话文件
+            var files = Directory.GetFiles(dataPath, "*.json");
 
-                // 尝试从缓存获取或加载文件
-                var memory = await GetSessionMemoryAsync(sessionId);
-
-                var sessionInfo = new ChatSessionInfo
+            foreach (var file in files)
+            {
+                try
                 {
-                    Id = sessionId,
-                    Title = GenerateSessionTitle(memory),
-                    LastActivity = fileInfo.LastWriteTime,
-                    MessageCount = memory.Messages.Count(m => m.Role != "system"),
-                    CreatedAt = fileInfo.CreationTime
-                };
+                    var sessionId = Path.GetFileNameWithoutExtension(file);
+                    var fileInfo = new System.IO.FileInfo(file);
 
-                sessions.Add(sessionInfo);
+                    // 尝试从缓存获取或加载文件
+                    var memory = await GetSessionMemoryAsync(sessionId, userId);
+
+                    var sessionInfo = new ChatSessionInfo
+                    {
+                        Id = sessionId,
+                        Title = GenerateSessionTitle(memory),
+                        LastActivity = fileInfo.LastWriteTime,
+                        MessageCount = memory.Messages.Count(m => m.Role != "system"),
+                        CreatedAt = fileInfo.CreationTime
+                    };
+
+                    sessions.Add(sessionInfo);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error loading session info from {file}: {ex.Message}");
+                }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading session info from {file}: {ex.Message}");
-            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error scanning sessions: {ex.Message}");
         }
 
         return sessions.OrderByDescending(s => s.LastActivity).ToList();
     }
 
     /// <summary>
-    /// 删除指定会话
+    /// 删除指定会话（带用户隔离）
     /// </summary>
     /// <param name="sessionId">会话ID</param>
+    /// <param name="userId">用户ID，用于数据隔离</param>
     /// <returns>异步任务</returns>
-    public async Task DeleteSessionAsync(string sessionId)
+    public async Task DeleteSessionAsync(string sessionId, string? userId = null)
     {
-        await ClearSessionAsync(sessionId);
+        await ClearSessionAsync(sessionId, userId);
     }
 
     /// <summary>
-    /// 获取所有会话的详细信息（包含消息内容）
+    /// 获取所有会话的详细信息（包含消息内容，支持用户隔离）
     /// </summary>
+    /// <param name="userId">用户ID，用于数据隔离</param>
     /// <returns>会话ID和代理内存的键值对字典</returns>
-    public async Task<Dictionary<string, AgentMemory>> GetAllSessionsAsync()
+    public async Task<Dictionary<string, AgentMemory>> GetAllSessionsAsync(string? userId = null)
     {
         var result = new Dictionary<string, AgentMemory>();
 
-        if (!Directory.Exists(_dataPath))
+        string dataPath;
+        if (!string.IsNullOrEmpty(userId))
+        {
+            // 用户特定的数据目录
+            dataPath = Path.Combine(_dataPath, "Users", userId);
+        }
+        else
+        {
+            // 默认数据目录（兼容旧版本）
+            dataPath = _dataPath;
+        }
+
+        if (!Directory.Exists(dataPath))
         {
             return result;
         }
 
-        var files = Directory.GetFiles(_dataPath, "*.json");
+        var files = Directory.GetFiles(dataPath, "*.json");
         foreach (var file in files)
         {
             try
             {
                 var sessionId = Path.GetFileNameWithoutExtension(file);
-                var memory = await GetSessionMemoryAsync(sessionId);
+                var memory = await GetSessionMemoryAsync(sessionId, userId);
                 if (memory != null)
                 {
                     result[sessionId] = memory;
@@ -295,28 +344,43 @@ public class ChatHistoryService : IChatHistoryService
     }
 
     /// <summary>
-    /// 获取会话文件路径
+    /// 获取会话文件路径（支持用户隔离）
     /// </summary>
     /// <param name="sessionId">会话ID</param>
+    /// <param name="userId">用户ID，用于数据隔离</param>
     /// <returns>文件路径</returns>
-    private string GetSessionFilePath(string sessionId)
+    private string GetSessionFilePath(string sessionId, string? userId = null)
     {
         // 清理会话ID中的非法字符
         var cleanSessionId = string.Join("", sessionId.Split(Path.GetInvalidFileNameChars()));
+        
+        if (!string.IsNullOrEmpty(userId))
+        {
+            // 为每个用户创建独立的子目录
+            var userDataPath = Path.Combine(_dataPath, userId);
+            if (!Directory.Exists(userDataPath))
+            {
+                Directory.CreateDirectory(userDataPath);
+            }
+            return Path.Combine(userDataPath, $"{cleanSessionId}.json");
+        }
+        
+        // 兼容旧版本，没有用户ID时使用原路径
         return Path.Combine(_dataPath, $"{cleanSessionId}.json");
     }
 
     /// <summary>
-    /// 保存会话到文件
+    /// 保存会话到文件（支持用户隔离）
     /// </summary>
     /// <param name="sessionId">会话ID</param>
     /// <param name="memory">代理内存</param>
+    /// <param name="userId">用户ID，用于数据隔离</param>
     /// <returns>异步任务</returns>
-    private async Task SaveSessionToFileAsync(string sessionId, AgentMemory memory)
+    private async Task SaveSessionToFileAsync(string sessionId, AgentMemory memory, string? userId = null)
     {
         try
         {
-            var filePath = GetSessionFilePath(sessionId);
+            var filePath = GetSessionFilePath(sessionId, userId);
             var json = JsonSerializer.Serialize(memory, _jsonOptions);
             await File.WriteAllTextAsync(filePath, json);
         }
@@ -339,34 +403,35 @@ public class ChatHistoryService : IChatHistoryService
             try
             {
                 // 处理队列中的保存请求
+                var saveRequests = new List<(string sessionId, AgentMemory memory, string? userId)>();
                 while (_saveQueue.TryDequeue(out var saveRequest))
                 {
-                    processedSessions.Add(saveRequest.sessionId);
+                    saveRequests.Add(saveRequest);
                 }
 
                 // 批量保存已处理的会话
-                if (processedSessions.Count > 0)
+                if (saveRequests.Count > 0)
                 {
                     var saveTasks = new List<Task>();
                     
-                    foreach (var sessionId in processedSessions)
+                    foreach (var request in saveRequests)
                     {
-                        if (_sessionCache.TryGetValue(sessionId, out var memory))
+                        if (_sessionCache.TryGetValue(request.sessionId, out var memory))
                         {
-                            // 并行保存以提高性能
-                            saveTasks.Add(SaveSessionToFileAsync(sessionId, memory));
+                            // 并行保存以提高性能（包含用户ID）
+                            saveTasks.Add(SaveSessionToFileAsync(request.sessionId, memory, request.userId));
                         }
                         
                         // 从待保存列表中移除
                         lock (_pendingSavesLock)
                         {
-                            _pendingSaves.Remove(sessionId);
+                            _pendingSaves.Remove(request.sessionId);
                         }
                     }
                     
                     // 等待所有保存任务完成
                     await Task.WhenAll(saveTasks);
-                    processedSessions.Clear();
+                    saveRequests.Clear();
                 }
 
                 // 等待一段时间再处理下一批

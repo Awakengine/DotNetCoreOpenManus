@@ -7,6 +7,7 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 @inject IChatHistoryService ChatHistoryService
+@inject IUserService UserService
 @inject IConfigurationService ConfigurationService
 @inject ILogger<NavMenu> Logger
 @implements IDisposable
@@ -38,28 +39,46 @@
 	</div>
 
 	<!-- 底部用户信息和设置区域 -->
-	<div class="chat-history-footer">
-		<div class="user-info">
-			<div class="user-avatar">
-				<i class="fas fa-user"></i>
+	<div class="user-info-section">
+		@if (currentUser != null)
+		{
+			<div class="user-info">
+				<div class="user-avatar">
+					@if (!string.IsNullOrEmpty(currentUser.Avatar))
+					{
+						<img src="@currentUser.Avatar" alt="@currentUser.Name" class="avatar-img" />
+					}
+					else
+					{
+						<i class="fas @(currentUser.Type == UserType.Guest ? "fa-user-secret" : "fa-user-circle")"></i>
+					}
+				</div>
+				<div class="user-details">
+					<div class="user-name">@currentUser.Name</div>
+					<div class="user-status">@(currentUser.Type == UserType.Guest ? "游客" : "已登录")</div>
+				</div>
 			</div>
-			<div class="user-details">
-				<div class="user-name">用户</div>
-				<div class="user-status">在线</div>
+			
+			<div class="user-actions">
+				<button class="btn btn-sm btn-outline-secondary me-2" title="设置">
+					<i class="fas fa-cog"></i>
+				</button>
+				<button class="btn btn-sm btn-outline-secondary me-2" @onclick="LogoutUser" title="退出登录">
+					<i class="fas fa-sign-out-alt"></i>
+				</button>
+				<button class="btn btn-sm btn-outline-secondary" title="帮助">
+					<i class="fas fa-question-circle"></i>
+				</button>
 			</div>
-		</div>
-		<div class="footer-actions">
-			@* <button class="btn-settings" title="设置" @onclick="ShowSettingsModal">
-				<i class="fas fa-cog"></i>
-			</button> *@
-			<button class="btn-settings" title="设置" @onclick="ShowSettingsModal">设置</button>
-
-			<button class="btn-help" title="帮助">
-				<i class="fas fa-question-circle"></i>
-			</button>
-		</div>
-		<p class="debug">模态框状态：@(isSettingsModalVisible ? "显示中" : "隐藏")</p>
-
+		}
+		else
+		{
+			<div class="login-prompt">
+				<a href="/user-management" class="btn btn-primary btn-sm">
+					<i class="fas fa-sign-in-alt me-2"></i>登录/注册
+				</a>
+			</div>
+		}
 	</div>
 </div>
 
@@ -85,24 +104,52 @@
 	private bool isSettingsModalVisible = false;
 
 	/// <summary>
+	/// 当前用户信息
+	/// </summary>
+	private UserInfo? currentUser = null;
+
+	/// <summary>
 	/// 组件初始化时执行
-	/// 从ChatHistoryService加载会话列表
+	/// 从ChatHistoryService加载会话列表和用户信息
 	/// </summary>
 	protected override async Task OnInitializedAsync()
 	{
+		await LoadCurrentUserAsync();
 		await LoadChatSessionsAsync();
 		StateHasChanged();
 	}
 
 	/// <summary>
-	/// 加载聊天会话列表
+	/// 加载当前用户信息
+	/// </summary>
+	private async Task LoadCurrentUserAsync()
+	{
+		try
+		{
+			var currentUserId = await UserService.GetCurrentUserIdAsync();
+			if (!string.IsNullOrEmpty(currentUserId))
+			{
+				currentUser = await UserService.GetUserByIdAsync(currentUserId);
+			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error loading current user: {ex.Message}");
+		}
+	}
+
+	/// <summary>
+	/// 加载聊天会话列表（根据当前用户）
 	/// </summary>
 	private async Task LoadChatSessionsAsync()
 	{
 		try
 		{
-			// 从聊天历史服务加载所有会话信息
-			var allSessions = await ChatHistoryService.GetAllSessionsAsync();
+			// 获取当前用户ID
+			var currentUserId = currentUser?.Id;
+			
+			// 从聊天历史服务加载用户的会话信息
+			var allSessions = await ChatHistoryService.GetAllSessionsAsync(currentUserId);
 
 			chatSessions = allSessions.Select(kvp => new ChatSessionInfo
 				{
@@ -165,6 +212,25 @@
 	{
 		isSettingsModalVisible = isVisible;
 		InvokeAsync(StateHasChanged); // 强制触发重新渲染
+	}
+
+	/// <summary>
+	/// 用户退出登录
+	/// </summary>
+	private async Task LogoutUser()
+	{
+		try
+		{
+			await UserService.LogoutAsync();
+			currentUser = null;
+			await LoadChatSessionsAsync();
+			StateHasChanged();
+			Navigation.NavigateTo("/", true);
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, "用户退出登录失败");
+		}
 	}
 
 	public void Dispose()

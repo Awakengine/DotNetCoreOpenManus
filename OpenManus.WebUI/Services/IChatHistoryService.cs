@@ -8,51 +8,58 @@ namespace OpenManus.WebUI.Services;
 public interface IChatHistoryService
 {
     /// <summary>
-    /// 获取指定会话的代理内存
+    /// 获取指定会话的代理内存（带用户隔离）
     /// </summary>
     /// <param name="sessionId">会话ID</param>
+    /// <param name="userId">用户ID，用于数据隔离</param>
     /// <returns>代理内存对象</returns>
-    Task<AgentMemory> GetSessionMemoryAsync(string sessionId);
+    Task<AgentMemory> GetSessionMemoryAsync(string sessionId, string? userId = null);
     
     /// <summary>
-    /// 保存会话内存到持久化存储
+    /// 保存会话内存到持久化存储（带用户隔离）
     /// </summary>
     /// <param name="sessionId">会话ID</param>
     /// <param name="memory">代理内存对象</param>
+    /// <param name="userId">用户ID，用于数据隔离</param>
     /// <returns>异步任务</returns>
-    Task SaveSessionMemoryAsync(string sessionId, AgentMemory memory);
+    Task SaveSessionMemoryAsync(string sessionId, AgentMemory memory, string? userId = null);
     
     /// <summary>
-    /// 添加消息到会话并实时保存
+    /// 添加消息到会话并实时保存（带用户隔离）
     /// </summary>
     /// <param name="sessionId">会话ID</param>
     /// <param name="message">要添加的消息</param>
+    /// <param name="userId">用户ID，用于数据隔离</param>
     /// <returns>异步任务</returns>
-    Task<AgentMemory> AddMessageAsync(string sessionId, AgentMessage message);
+    Task<AgentMemory> AddMessageAsync(string sessionId, AgentMessage message, string? userId = null);
     
     /// <summary>
-    /// 清除指定会话的所有消息
+    /// 删除指定会话的所有数据（带用户隔离）
     /// </summary>
     /// <param name="sessionId">会话ID</param>
+    /// <param name="userId">用户ID，用于数据隔离</param>
     /// <returns>异步任务</returns>
-    Task ClearSessionAsync(string sessionId);
+    Task DeleteSessionAsync(string sessionId, string? userId = null);
     
     /// <summary>
-    /// 获取所有会话的基本信息
+    /// 清空指定会话的所有数据（带用户隔离）
     /// </summary>
-    /// <returns>会话信息列表</returns>
-    Task<List<ChatSessionInfo>> GetSessionsAsync();
+    /// <param name="sessionId">会话ID</param>
+    /// <param name="userId">用户ID，用于数据隔离</param>
+    /// <returns>异步任务</returns>
+    Task ClearSessionAsync(string sessionId, string? userId = null);
     
     /// <summary>
-	/// 删除指定会话
-	/// </summary>
-	/// <param name="sessionId">会话ID</param>
-	/// <returns>异步任务</returns>
-	Task DeleteSessionAsync(string sessionId);
-	
-	/// <summary>
-	/// 获取所有会话的详细信息（包含消息内容）
-	/// </summary>
-	/// <returns>会话ID和代理内存的键值对字典</returns>
-	Task<Dictionary<string, AgentMemory>> GetAllSessionsAsync();
+    /// 获取所有会话的基本信息（带用户隔离）
+    /// </summary>
+    /// <param name="userId">用户ID，用于数据隔离</param>
+    /// <returns>会话信息列表</returns>
+    Task<List<ChatSessionInfo>> GetSessionsAsync(string? userId = null);
+    
+    /// <summary>
+    /// 获取所有会话的详细信息（包含消息内容，带用户隔离）
+    /// </summary>
+    /// <param name="userId">用户ID，用于数据隔离</param>
+    /// <returns>会话ID和代理内存的键值对字典</returns>
+    Task<Dictionary<string, AgentMemory>> GetAllSessionsAsync(string? userId = null);
 }

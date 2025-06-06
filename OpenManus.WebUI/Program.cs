@@ -16,6 +16,8 @@ builder.Services.AddScoped<IHttpClientService, HttpClientService>();
 builder.Services.AddSingleton<IConfigurationService, ConfigurationService>(); // 配置服务
 builder.Services.AddSingleton<FileManagementService>(); // 文件管理服务
 builder.Services.AddSingleton<IChatHistoryService, ChatHistoryService>(); // 聊天历史服务
+builder.Services.AddSingleton<SessionManagementService>();
+builder.Services.AddSingleton<IUserService, UserService>();
 builder.Services.AddSingleton<ChatService>(); // 聊天服务
 builder.Services.AddScoped<AgentService>(); // AI代理服务
 

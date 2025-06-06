@@ -7,6 +7,7 @@
 
 @inject AgentService AgentService
 @inject IChatHistoryService ChatHistoryService
+@inject IUserService UserService
 @inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
@@ -290,6 +291,11 @@
 	private string currentSessionId = "agent-session";
 
 	/// <summary>
+	/// 当前用户ID
+	/// </summary>
+	private string? currentUserId = null;
+
+	/// <summary>
 	/// 会话记忆字典，存储多个会话的记忆
 	/// </summary>
 	private Dictionary<string, AgentMemory> sessionMemories = new();
@@ -338,6 +344,16 @@
 	/// <returns>异步任务</returns>
 	protected override async Task OnInitializedAsync()
 	{
+		// 获取当前用户ID
+		currentUserId = await UserService.GetCurrentUserIdAsync();
+		
+		// 如果没有用户登录，跳转到用户管理页面
+		if (string.IsNullOrEmpty(currentUserId))
+		{
+			Navigation.NavigateTo("/user-management");
+			return;
+		}
+		
 		availableTools = AgentService.GetAvailableTools();
 
 		// 设置当前会话ID
@@ -469,7 +485,7 @@
 					Timestamp = DateTime.UtcNow
 				};
 			// 只保存到持久化存储，内存会在下次加载时同步，并返回
-			tempAgentMemory = await ChatHistoryService.AddMessageAsync(currentSessionId, userMsg);
+			tempAgentMemory = await ChatHistoryService.AddMessageAsync(currentSessionId, userMsg, currentUserId);
 			currentExecution.Steps.Add("用户消息已添加到会话记忆并保存");
 			await InvokeAsync(StateHasChanged);
 
@@ -533,6 +549,7 @@
 			}
 
 			// 保存助手消息到聊天历史服务（只保存一次）
+			tempAgentMemory = await ChatHistoryService.AddMessageAsync(currentSessionId, assistantMessage, currentUserId);
 
 			// 更新执行状态为完成
 			currentExecution.Steps.Add("AI响应接收完成并保存");
@@ -567,7 +584,7 @@
 			if (tempAgentMemory != null)
 			{
 				// 只保存到持久化存储，同时添加到当前内存
-				tempAgentMemory = await ChatHistoryService.AddMessageAsync(currentSessionId, errorMessage);
+				tempAgentMemory = await ChatHistoryService.AddMessageAsync(currentSessionId, errorMessage, currentUserId);
 			}
 
 			// 更新执行状态为错误
@@ -619,7 +636,7 @@
 	private async Task ClearSession()
 	{
 		// 清空聊天历史服务中的会话数据
-		await ChatHistoryService.ClearSessionAsync(currentSessionId);
+		await ChatHistoryService.ClearSessionAsync(currentSessionId, currentUserId);
 
 		// 清空AgentService中的会话
 		AgentService.ClearSession(currentSessionId);
@@ -689,8 +706,8 @@
 			}
 			else
 			{
-				// 从聊天历史服务获取会话记忆
-				agentMemory = await ChatHistoryService.GetSessionMemoryAsync(currentSessionId);
+				// 从聊天历史服务获取会话记忆，传入用户ID
+				agentMemory = await ChatHistoryService.GetSessionMemoryAsync(currentSessionId, currentUserId);
 				if (agentMemory == null)
 				{
 					// 如果聊天历史服务中没有，则从AgentService获取
