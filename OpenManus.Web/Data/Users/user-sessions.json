@@ -1,100 +1,10 @@
 {
-  "bb406ff9-a28d-430b-9c81-dc1255992281": [
-    {
-      "userId": "bb406ff9-a28d-430b-9c81-dc1255992281",
-      "sessionId": "96a73c79-a98e-46a7-a761-60db4e527c94",
-      "createdAt": "2025-06-06T10:16:04.5557513Z",
-      "lastAccessed": "2025-06-06T10:16:04.5557514Z",
-      "isActive": true
-    }
-  ],
-  "16ea2a8f-7ec1-4247-947e-26a241ac6648": [
-    {
-      "userId": "16ea2a8f-7ec1-4247-947e-26a241ac6648",
-      "sessionId": "ef03af7e-2fc5-44ca-84d4-35899dc2fe83",
-      "createdAt": "2025-06-06T10:14:25.6364581Z",
-      "lastAccessed": "2025-06-06T10:14:25.6364585Z",
-      "isActive": true
-    }
-  ],
-  "c69dd4f6-0665-480d-823d-c04f65113de0": [
-    {
-      "userId": "c69dd4f6-0665-480d-823d-c04f65113de0",
-      "sessionId": "10458d98-e7e1-4549-a9a9-5d8614c45506",
-      "createdAt": "2025-06-06T10:07:01.4451222Z",
-      "lastAccessed": "2025-06-06T10:07:01.4451362Z",
-      "isActive": true
-    }
-  ],
-  "a641f9b0-6df9-473e-ac73-e78aadd06528": [
-    {
-      "userId": "a641f9b0-6df9-473e-ac73-e78aadd06528",
-      "sessionId": "cad709d7-49fb-4bbd-963b-3c3e3ec34fea",
-      "createdAt": "2025-06-06T10:13:30.038822Z",
-      "lastAccessed": "2025-06-06T10:13:30.038822Z",
-      "isActive": true
-    }
-  ],
-  "87d6889a-e054-4f29-8e04-7b8f6dc6fac9": [
-    {
-      "userId": "87d6889a-e054-4f29-8e04-7b8f6dc6fac9",
-      "sessionId": "48ab009b-e515-4e30-86ae-2eaf980b786e",
-      "createdAt": "2025-06-06T10:14:05.4030741Z",
-      "lastAccessed": "2025-06-06T10:14:05.4030741Z",
-      "isActive": true
-    }
-  ],
   "1dbb0210-6a1b-41a7-8998-d7e6b7c20a0f": [
     {
       "userId": "1dbb0210-6a1b-41a7-8998-d7e6b7c20a0f",
       "sessionId": "4cf20775-4941-4390-8af6-c9982cf0498b",
       "createdAt": "2025-06-06T10:13:38.7946201Z",
       "lastAccessed": "2025-06-06T10:13:38.7946201Z",
-      "isActive": true
-    }
-  ],
-  "2c24beed-0891-4fe6-ba93-a9bad945f430": [
-    {
-      "userId": "2c24beed-0891-4fe6-ba93-a9bad945f430",
-      "sessionId": "8a420027-0b53-4a16-941d-d5d17d308be8",
-      "createdAt": "2025-06-06T10:16:08.358626Z",
-      "lastAccessed": "2025-06-06T10:16:08.358626Z",
-      "isActive": true
-    }
-  ],
-  "6e41094d-c4ee-4dc1-a1a0-cd60ce9dcf5e": [
-    {
-      "userId": "6e41094d-c4ee-4dc1-a1a0-cd60ce9dcf5e",
-      "sessionId": "59cf39e5-2a1a-4b1e-b7da-a36f95d114e3",
-      "createdAt": "2025-06-06T10:14:00.8825782Z",
-      "lastAccessed": "2025-06-06T10:14:00.8825783Z",
-      "isActive": true
-    }
-  ],
-  "3e486334-dbad-4129-9d73-f8f82280e0df": [
-    {
-      "userId": "3e486334-dbad-4129-9d73-f8f82280e0df",
-      "sessionId": "41830c03-afdd-4efc-8cd1-59e5424b1eaa",
-      "createdAt": "2025-06-06T10:11:22.3063419Z",
-      "lastAccessed": "2025-06-06T10:11:22.3063419Z",
-      "isActive": true
-    }
-  ],
-  "35dd970c-5a28-4e08-af4c-96a506bf730a": [
-    {
-      "userId": "35dd970c-5a28-4e08-af4c-96a506bf730a",
-      "sessionId": "31514df2-0433-4cbc-8d3a-7a2ef0d0ecdb",
-      "createdAt": "2025-06-06T10:11:31.2274936Z",
-      "lastAccessed": "2025-06-06T10:11:31.2274937Z",
-      "isActive": true
-    }
-  ],
-  "054289fe-35f5-4dcb-bf9f-aac5d3edc312": [
-    {
-      "userId": "054289fe-35f5-4dcb-bf9f-aac5d3edc312",
-      "sessionId": "0343d7bd-50e0-444f-bb5a-7ffb5f7dafee",
-      "createdAt": "2025-06-06T10:11:35.6609477Z",
-      "lastAccessed": "2025-06-06T10:11:35.6609478Z",
       "isActive": true
     }
   ],
@@ -107,12 +17,136 @@
       "isActive": true
     }
   ],
+  "c69dd4f6-0665-480d-823d-c04f65113de0": [
+    {
+      "userId": "c69dd4f6-0665-480d-823d-c04f65113de0",
+      "sessionId": "10458d98-e7e1-4549-a9a9-5d8614c45506",
+      "createdAt": "2025-06-06T10:07:01.4451222Z",
+      "lastAccessed": "2025-06-06T10:07:01.4451362Z",
+      "isActive": true
+    }
+  ],
   "d5fcc772-128f-4cc2-ba96-91147ca00c29": [
     {
       "userId": "d5fcc772-128f-4cc2-ba96-91147ca00c29",
       "sessionId": "bd5f4a8d-d06f-4a9f-a8be-e14c0fc7169e",
       "createdAt": "2025-06-06T10:16:37.3150197Z",
       "lastAccessed": "2025-06-06T10:16:37.3150197Z",
+      "isActive": true
+    }
+  ],
+  "10c56c11-04ca-4c17-9d42-90ce3c1bf7d6": [
+    {
+      "userId": "10c56c11-04ca-4c17-9d42-90ce3c1bf7d6",
+      "sessionId": "0df0986c-01d1-4abe-9a8c-d52dd7572d2f",
+      "createdAt": "2025-06-06T11:58:23.470359Z",
+      "lastAccessed": "2025-06-06T11:58:23.470359Z",
+      "isActive": true
+    },
+    {
+      "userId": "10c56c11-04ca-4c17-9d42-90ce3c1bf7d6",
+      "sessionId": "6c8a23ed-c149-4b9e-aa47-aaa74ae00d3b",
+      "createdAt": "2025-06-06T11:58:27.95894Z",
+      "lastAccessed": "2025-06-06T11:58:27.95894Z",
+      "isActive": true
+    }
+  ],
+  "a641f9b0-6df9-473e-ac73-e78aadd06528": [
+    {
+      "userId": "a641f9b0-6df9-473e-ac73-e78aadd06528",
+      "sessionId": "cad709d7-49fb-4bbd-963b-3c3e3ec34fea",
+      "createdAt": "2025-06-06T10:13:30.038822Z",
+      "lastAccessed": "2025-06-06T10:13:30.038822Z",
+      "isActive": true
+    }
+  ],
+  "054289fe-35f5-4dcb-bf9f-aac5d3edc312": [
+    {
+      "userId": "054289fe-35f5-4dcb-bf9f-aac5d3edc312",
+      "sessionId": "0343d7bd-50e0-444f-bb5a-7ffb5f7dafee",
+      "createdAt": "2025-06-06T10:11:35.6609477Z",
+      "lastAccessed": "2025-06-06T10:11:35.6609478Z",
+      "isActive": true
+    }
+  ],
+  "35dd970c-5a28-4e08-af4c-96a506bf730a": [
+    {
+      "userId": "35dd970c-5a28-4e08-af4c-96a506bf730a",
+      "sessionId": "31514df2-0433-4cbc-8d3a-7a2ef0d0ecdb",
+      "createdAt": "2025-06-06T10:11:31.2274936Z",
+      "lastAccessed": "2025-06-06T10:11:31.2274937Z",
+      "isActive": true
+    }
+  ],
+  "bb406ff9-a28d-430b-9c81-dc1255992281": [
+    {
+      "userId": "bb406ff9-a28d-430b-9c81-dc1255992281",
+      "sessionId": "96a73c79-a98e-46a7-a761-60db4e527c94",
+      "createdAt": "2025-06-06T10:16:04.5557513Z",
+      "lastAccessed": "2025-06-06T10:16:04.5557514Z",
+      "isActive": true
+    }
+  ],
+  "87d6889a-e054-4f29-8e04-7b8f6dc6fac9": [
+    {
+      "userId": "87d6889a-e054-4f29-8e04-7b8f6dc6fac9",
+      "sessionId": "48ab009b-e515-4e30-86ae-2eaf980b786e",
+      "createdAt": "2025-06-06T10:14:05.4030741Z",
+      "lastAccessed": "2025-06-06T10:14:05.4030741Z",
+      "isActive": true
+    }
+  ],
+  "3e486334-dbad-4129-9d73-f8f82280e0df": [
+    {
+      "userId": "3e486334-dbad-4129-9d73-f8f82280e0df",
+      "sessionId": "41830c03-afdd-4efc-8cd1-59e5424b1eaa",
+      "createdAt": "2025-06-06T10:11:22.3063419Z",
+      "lastAccessed": "2025-06-06T10:11:22.3063419Z",
+      "isActive": true
+    }
+  ],
+  "16ea2a8f-7ec1-4247-947e-26a241ac6648": [
+    {
+      "userId": "16ea2a8f-7ec1-4247-947e-26a241ac6648",
+      "sessionId": "ef03af7e-2fc5-44ca-84d4-35899dc2fe83",
+      "createdAt": "2025-06-06T10:14:25.6364581Z",
+      "lastAccessed": "2025-06-06T10:14:25.6364585Z",
+      "isActive": true
+    }
+  ],
+  "6e41094d-c4ee-4dc1-a1a0-cd60ce9dcf5e": [
+    {
+      "userId": "6e41094d-c4ee-4dc1-a1a0-cd60ce9dcf5e",
+      "sessionId": "59cf39e5-2a1a-4b1e-b7da-a36f95d114e3",
+      "createdAt": "2025-06-06T10:14:00.8825782Z",
+      "lastAccessed": "2025-06-06T10:14:00.8825783Z",
+      "isActive": true
+    }
+  ],
+  "01abcaf4-8a78-494e-99cc-52f45b2ba62a": [
+    {
+      "userId": "01abcaf4-8a78-494e-99cc-52f45b2ba62a",
+      "sessionId": "71d30655-18b5-49c0-815f-f1d8e277ee3c",
+      "createdAt": "2025-06-06T11:58:47.586393Z",
+      "lastAccessed": "2025-06-06T11:58:47.586393Z",
+      "isActive": true
+    }
+  ],
+  "d22fb76c-8c66-4ec6-8d3a-70190f1669aa": [
+    {
+      "userId": "d22fb76c-8c66-4ec6-8d3a-70190f1669aa",
+      "sessionId": "5d582a1a-66ad-478b-aae6-62bfb647b5dc",
+      "createdAt": "2025-06-06T11:59:09.397302Z",
+      "lastAccessed": "2025-06-06T11:59:09.397302Z",
+      "isActive": true
+    }
+  ],
+  "2c24beed-0891-4fe6-ba93-a9bad945f430": [
+    {
+      "userId": "2c24beed-0891-4fe6-ba93-a9bad945f430",
+      "sessionId": "8a420027-0b53-4a16-941d-d5d17d308be8",
+      "createdAt": "2025-06-06T10:16:08.358626Z",
+      "lastAccessed": "2025-06-06T10:16:08.358626Z",
       "isActive": true
     }
   ]
