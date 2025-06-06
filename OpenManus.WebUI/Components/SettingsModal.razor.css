@@ -64,7 +64,7 @@
     font-size: 1.5rem;
     font-weight: 700;
     line-height: 1;
-    color: #000;
+    color: #ffffff;
     opacity: 0.5;
     cursor: pointer;
     padding: 0;
@@ -105,7 +105,7 @@
     z-index: 1040;
     width: 100vw;
     height: 100vh;
-    background-color: #000;
+    background-color: #252526;
     opacity: 0.5;
 }
 
@@ -158,25 +158,25 @@
 }
 
 .btn-primary {
-    color: #fff;
+    color: #ffffff;
     background-color: #0d6efd;
     border-color: #0d6efd;
 }
 
 .btn-primary:hover {
-    color: #fff;
+    color: #ffffff;
     background-color: #0b5ed7;
     border-color: #0a58ca;
 }
 
 .btn-secondary {
-    color: #fff;
+    color: #ffffff;
     background-color: #6c757d;
     border-color: #6c757d;
 }
 
 .btn-secondary:hover {
-    color: #fff;
+    color: #ffffff;
     background-color: #5c636a;
     border-color: #565e64;
 }
