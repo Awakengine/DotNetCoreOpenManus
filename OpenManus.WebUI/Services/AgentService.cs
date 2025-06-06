@@ -2,6 +2,7 @@ using OpenManus.WebUI.Models;
 using OpenManus.WebUI.Services.Tools;
 using System.Text.Json;
 using System.Text;
+using System.Collections.Concurrent;
 
 namespace OpenManus.WebUI.Services;
 
@@ -13,7 +14,7 @@ public class AgentService
     /// <summary>
     /// 存储不同会话的代理内存
     /// </summary>
-    private readonly Dictionary<string, AgentMemory> _sessions = new();
+    private readonly ConcurrentDictionary<string, AgentMemory> _sessions = new();
 
     /// <summary>
     /// 可用的代理工具列表
@@ -21,32 +22,43 @@ public class AgentService
     private readonly List<IAgentTool> _tools = new();
 
     /// <summary>
-    /// HTTP客户端，用于网络请求
+    /// HTTP客户端服务，用于网络请求
     /// </summary>
-    private readonly HttpClient _httpClient;
-
-    /// <summary>
-    /// 文件管理服务
-    /// </summary>
-    private readonly FileManagementService _fileService;
+    private readonly IHttpClientService _httpClientService;
 
     /// <summary>
     /// 配置服务
     /// </summary>
     private readonly IConfigurationService _configurationService;
+    
+    /// <summary>
+    /// 聊天历史服务
+    /// </summary>
+    private readonly IChatHistoryService _chatHistoryService;
+    
+    /// <summary>
+    /// 服务提供者
+    /// </summary>
+    private readonly IServiceProvider _serviceProvider;
 
     /// <summary>
     /// 构造函数，初始化代理服务
     /// </summary>
-    /// <param name="httpClient">HTTP客户端</param>
-    /// <param name="fileService">文件管理服务</param>
+    /// <param name="httpClientService">HTTP客户端服务</param>
     /// <param name="configurationService">配置服务</param>
-    public AgentService(HttpClient httpClient, FileManagementService fileService, IConfigurationService configurationService)
+    /// <param name="chatHistoryService">聊天历史服务</param>
+    /// <param name="serviceProvider">服务提供者</param>
+    public AgentService(
+        IHttpClientService httpClientService,
+        IConfigurationService configurationService,
+        IChatHistoryService chatHistoryService,
+        IServiceProvider serviceProvider)
     {
-        _httpClient = httpClient;
-        _fileService = fileService;
+        _httpClientService = httpClientService;
         _configurationService = configurationService;
-        InitializeTools();
+        _chatHistoryService = chatHistoryService;
+        _serviceProvider = serviceProvider;
+        // 延迟初始化工具，避免循环依赖
     }
 
     /// <summary>
@@ -54,9 +66,12 @@ public class AgentService
     /// </summary>
     private void InitializeTools()
     {
-        _tools.Add(new FileOperationTool(_fileService));
+        if (_tools.Count > 0) return; // 避免重复初始化
+        
+        var fileService = _serviceProvider.GetRequiredService<FileManagementService>();
+        _tools.Add(new FileOperationTool(fileService));
         _tools.Add(new PythonExecuteTool());
-        _tools.Add(new SearchTool(_httpClient));
+        _tools.Add(new SearchTool(_httpClientService));
         _tools.Add(new TerminateTool());
     }
 
@@ -69,6 +84,8 @@ public class AgentService
     /// <returns>代理执行结果</returns>
     public async Task<AgentExecutionResult> ExecuteTaskAsync(string sessionId, string userMessage, int maxSteps = 2, string? customModel = null)
     {
+        InitializeTools(); // 确保工具已初始化
+        
         var memory = GetOrCreateSession(sessionId);
         memory.AddMessage(memory.Messages.Count + 1, "user", userMessage);
 
@@ -188,14 +205,10 @@ public class AgentService
             };
 
             var jsonContent = JsonSerializer.Serialize(requestBody);
+            
+            // 使用HttpClientService发送请求
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-
-            // 设置请求头
-            _httpClient.DefaultRequestHeaders.Clear();
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {llmConfig.ApiKey}");
-
-            // 发送请求
-            var response = await _httpClient.PostAsync($"{llmConfig.BaseUrl.TrimEnd('/')}/chat/completions", content);
+            var response = await _httpClientService.PostAsync($"{llmConfig.BaseUrl.TrimEnd('/')}/chat/completions", content, llmConfig.ApiKey);
 
             if (response.IsSuccessStatusCode)
             {
@@ -295,14 +308,14 @@ public class AgentService
             };
 
             var jsonContent = JsonSerializer.Serialize(requestBody);
+            
+            // 使用HttpClientService创建请求
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-
-            // 设置请求头
-            _httpClient.DefaultRequestHeaders.Clear();
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {llmConfig.ApiKey}");
-
-            // 发送请求
-            var response = await _httpClient.PostAsync($"{llmConfig.BaseUrl.TrimEnd('/')}/chat/completions", content, cancellationToken);
+            using var request = _httpClientService.CreateRequestWithAuth(HttpMethod.Post, $"{llmConfig.BaseUrl.TrimEnd('/')}/chat/completions", llmConfig.ApiKey);
+            request.Content = content;
+            
+            // 发送请求并获取流式响应
+            var response = await _httpClientService.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {

@@ -9,17 +9,17 @@ namespace OpenManus.WebUI.Services.Tools;
 public class SearchTool : BaseAgentTool
 {
     /// <summary>
-    /// HTTP客户端
+    /// HTTP客户端服务
     /// </summary>
-    private readonly HttpClient _httpClient;
+    private readonly IHttpClientService _httpClientService;
     
     /// <summary>
     /// 构造函数，初始化搜索工具
     /// </summary>
-    /// <param name="httpClient">HTTP客户端</param>
-    public SearchTool(HttpClient httpClient)
+    /// <param name="httpClientService">HTTP客户端服务</param>
+    public SearchTool(IHttpClientService httpClientService)
     {
-        _httpClient = httpClient;
+        _httpClientService = httpClientService;
     }
     
     /// <summary>

@@ -20,9 +20,24 @@ public class ChatHistoryService : IChatHistoryService
     private readonly ConcurrentDictionary<string, AgentMemory> _sessionCache = new();
 
     /// <summary>
+    /// 最大缓存会话数量，防止内存溢出
+    /// </summary>
+    private const int MaxCachedSessions = 100;
+
+    /// <summary>
     /// 后台保存任务队列
     /// </summary>
     private readonly ConcurrentQueue<(string sessionId, AgentMemory memory)> _saveQueue = new();
+    
+    /// <summary>
+    /// 批量保存的会话ID集合
+    /// </summary>
+    private readonly HashSet<string> _pendingSaves = new();
+    
+    /// <summary>
+    /// 批量保存锁
+    /// </summary>
+    private readonly object _pendingSavesLock = new();
 
     /// <summary>
     /// 后台保存服务的取消令牌
@@ -94,6 +109,13 @@ public class ChatHistoryService : IChatHistoryService
 
         // 创建新的会话内存
         var newMemory = new AgentMemory();
+        
+        // 检查缓存大小，如果超过限制则清理最旧的会话
+        if (_sessionCache.Count >= MaxCachedSessions)
+        {
+            CleanupOldSessions();
+        }
+        
         _sessionCache.TryAdd(sessionId, newMemory);
         return newMemory;
     }
@@ -114,6 +136,40 @@ public class ChatHistoryService : IChatHistoryService
 
         // 对于重要操作，也可以立即保存
         await SaveSessionToFileAsync(sessionId, memory);
+    }
+
+    /// <summary>
+    /// 异步保存会话到文件
+    /// </summary>
+    public Task SaveSessionAsync(string sessionId, AgentMemory memory)
+    {
+        try
+        {
+            // 检查是否已经在待保存列表中，避免重复保存
+            lock (_pendingSavesLock)
+            {
+                if (_pendingSaves.Contains(sessionId))
+                {
+                    return Task.CompletedTask; // 已经在队列中，跳过
+                }
+                _pendingSaves.Add(sessionId);
+            }
+            
+            // 添加到后台保存队列
+            _saveQueue.Enqueue((sessionId, memory));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error queuing session save: {ex.Message}");
+            
+            // 如果出错，从待保存列表中移除
+            lock (_pendingSavesLock)
+            {
+                _pendingSaves.Remove(sessionId);
+            }
+        }
+        
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -289,15 +345,29 @@ public class ChatHistoryService : IChatHistoryService
                 }
 
                 // 批量保存已处理的会话
-                foreach (var sessionId in processedSessions)
+                if (processedSessions.Count > 0)
                 {
-                    if (_sessionCache.TryGetValue(sessionId, out var memory))
+                    var saveTasks = new List<Task>();
+                    
+                    foreach (var sessionId in processedSessions)
                     {
-                        await SaveSessionToFileAsync(sessionId, memory);
+                        if (_sessionCache.TryGetValue(sessionId, out var memory))
+                        {
+                            // 并行保存以提高性能
+                            saveTasks.Add(SaveSessionToFileAsync(sessionId, memory));
+                        }
+                        
+                        // 从待保存列表中移除
+                        lock (_pendingSavesLock)
+                        {
+                            _pendingSaves.Remove(sessionId);
+                        }
                     }
+                    
+                    // 等待所有保存任务完成
+                    await Task.WhenAll(saveTasks);
+                    processedSessions.Clear();
                 }
-
-                processedSessions.Clear();
 
                 // 等待一段时间再处理下一批
                 await Task.Delay(2000, _cancellationTokenSource.Token);
@@ -333,6 +403,28 @@ public class ChatHistoryService : IChatHistoryService
     }
 
     /// <summary>
+    /// 清理旧的缓存会话，保留最近使用的会话
+    /// </summary>
+    private void CleanupOldSessions()
+    {
+        try
+        {
+            // 移除超出限制的最旧会话（简单的FIFO策略）
+            var sessionsToRemove = _sessionCache.Count - MaxCachedSessions + 10; // 多清理10个以减少频繁清理
+            var keysToRemove = _sessionCache.Keys.Take(sessionsToRemove).ToList();
+            
+            foreach (var key in keysToRemove)
+            {
+                _sessionCache.TryRemove(key, out _);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error cleaning up old sessions: {ex.Message}");
+        }
+    }
+
+    /// <summary>
     /// 释放资源
     /// </summary>
     public void Dispose()
@@ -340,7 +432,11 @@ public class ChatHistoryService : IChatHistoryService
         _cancellationTokenSource.Cancel();
         try
         {
-            _backgroundSaveTask.Wait(5000);
+            // 使用异步等待避免阻塞，设置合理的超时时间
+            if (!_backgroundSaveTask.Wait(TimeSpan.FromSeconds(5)))
+            {
+                Console.WriteLine("Background save task did not complete within timeout");
+            }
         }
         catch (Exception ex)
         {

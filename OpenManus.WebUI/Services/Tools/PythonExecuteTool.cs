@@ -69,7 +69,18 @@ public class PythonExecuteTool : BaseAgentTool
             
             if (!completed)
             {
-                process.Kill();
+                try
+                {
+                    if (!process.HasExited)
+                    {
+                        process.Kill(true); // 强制终止进程树
+                        process.WaitForExit(5000); // 等待进程完全退出
+                    }
+                }
+                catch (Exception killEx)
+                {
+                    Console.WriteLine($"Error killing Python process: {killEx.Message}");
+                }
                 return "Error: Python execution timed out";
             }
             
