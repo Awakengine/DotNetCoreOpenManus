@@ -161,12 +161,12 @@
             <form id="login-form" method="post" asp-action="Login">
                 <div class="mb-3">
                     <div class="row align-items-center">
-                        <div class="col-4">
+                        <div class="col-3">
                             <label for="Name" class="form-label mb-0">
                                 <i class="fas fa-user me-2"></i>用户名
                             </label>
                         </div>
-                        <div class="col-8">
+                        <div class="col-9">
                             <input asp-for="Name" class="form-control" placeholder="输入您的用户名" />
                         </div>
                     </div>
@@ -175,12 +175,12 @@
 
                 <div class="mb-3">
                     <div class="row align-items-center">
-                        <div class="col-4">
+                        <div class="col-3">
                             <label for="Password" class="form-label mb-0">
-                                <i class="fas fa-lock me-2"></i>密码
+                                <i class="fas fa-lock me-2"></i> 密 码 
                             </label>
                         </div>
-                        <div class="col-8">
+                        <div class="col-9">
                             <input asp-for="Password" type="password" class="form-control" placeholder="输入您的密码" />
                         </div>
                     </div>
@@ -336,6 +336,83 @@
                 confirmPasswordInput.setCustomValidity('');
             }
         });
+        
+        // 游客模式表单提交处理
+        document.getElementById('guest-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const button = this.querySelector('button[type="submit"]');
+            const originalText = button.innerHTML;
+            
+            // 显示加载状态
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>正在登录...';
+            button.disabled = true;
+            
+            // 发送请求
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                }
+            })
+            .then(response => {
+                if (response.ok && response.redirected) {
+                    // 成功重定向
+                    window.location.href = response.url;
+                } else if (response.ok) {
+                    // 检查是否是重定向响应
+                    return response.text().then(text => {
+                        if (text.includes('<!DOCTYPE html>')) {
+                            // 返回的是HTML页面，可能是重定向后的页面
+                            window.location.href = '/Agent';
+                        } else {
+                            throw new Error('未知响应格式');
+                        }
+                    });
+                } else {
+                    return response.json();
+                }
+            })
+            .then(data => {
+                if (data && data.error) {
+                    throw new Error(data.error.message || '游客登录失败');
+                }
+            })
+            .catch(error => {
+                // 显示错误信息
+                let errorMessage = '游客登录失败，请稍后重试。';
+                
+                if (error.message && !error.message.includes('Failed to fetch')) {
+                    errorMessage = error.message;
+                }
+                
+                // 移除现有的错误提示
+                const existingAlert = document.querySelector('.alert-danger');
+                if (existingAlert) {
+                    existingAlert.remove();
+                }
+                
+                // 创建新的错误提示
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger';
+                alertDiv.setAttribute('role', 'alert');
+                alertDiv.textContent = errorMessage;
+                
+                // 插入到表单前面
+                const card = document.querySelector('.user-management-card');
+                const firstChild = card.children[1]; // 第二个子元素（第一个是标题）
+                card.insertBefore(alertDiv, firstChild);
+                
+                // 滚动到错误提示
+                alertDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            })
+            .finally(() => {
+                // 恢复按钮状态
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+        });}]}}}
     </script>
 </body>
 </html>
